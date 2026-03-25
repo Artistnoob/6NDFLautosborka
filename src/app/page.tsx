@@ -225,7 +225,7 @@ export default function Home() {
         const a = document.createElement('a')
         a.href = url
         // Пытаемся взять имя из заголовков или ставим дефолт
-        a.download = reports.length === 1 ? `updated_${reports[0].file.name}` : "updated_reports.xml"
+        a.download = reports.length === 1 ? `${reports[0].file.name}` : "reports.xml"
         document.body.appendChild(a)
         a.click()
         a.remove()
