@@ -44,13 +44,13 @@ export async function POST(req: NextRequest) {
     const xmlString = builder.buildObject(parsedReport);
     const finalBuffer = iconv.encode(xmlString, 'win1251');
 
-    // Возвращаем файл напрямую (не JSON!)
-    return new Response(finalBuffer, {
-      headers: {
-        'Content-Type': 'application/xml',
-        'Content-Disposition': `attachment; filename="updated_${reportFile.name}"`,
-      },
-    });
+    // Самый стабильный способ в Next.js 15.2+
+return new Response(finalBuffer.buffer as ArrayBuffer, {
+  headers: {
+    'Content-Type': 'application/xml',
+    'Content-Disposition': `attachment; filename="updated_${reportFile.name}"`,
+  },
+});
 
   } catch (err: any) {
     console.error(err);
