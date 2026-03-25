@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
 return new Response(finalBuffer.buffer as ArrayBuffer, {
   headers: {
     'Content-Type': 'application/xml',
-    'Content-Disposition': `attachment; filename="${reportFile.name}"`,
+    'Content-Disposition': `attachment; filename="updated_${reportFile.name}"`,
   },
 });
 
