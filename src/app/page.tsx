@@ -203,47 +203,50 @@ export default function Home() {
 
   // Основная функция запуска
   const run = async () => {
-    setRunning(true)
-    setLogs([])
+  setRunning(true)
+  setLogs([])
 
-    addLog(`Запуск обработки: ${reports.length} отчет(ов)...`, 'info')
+  addLog(`Запуск обработки: ${reports.length} отчёт(ов)...`, 'info')
 
-    const formData = new FormData()
-    notifs.forEach(f => formData.append('notifications', f.file))
-    reports.forEach(f => formData.append('reports', f.file))
+  const formData = new FormData()
+  notifs.forEach(f => formData.append('notifications', f.file))
+  reports.forEach(f => formData.append('reports', f.file))
 
-    try {
-      const res = await fetch('/api/process-reports', {
-        method: 'POST',
-        body: formData,
-      })
+  try {
+    const res = await fetch('/api/process-reports', {
+      method: 'POST',
+      body: formData,
+    })
 
-      if (res.ok) {
-        // Успех: получаем файл напрямую
-        const blob = await res.blob()
+    if (res.ok) {
+      const json = await res.json() as { files: { name: string; data: string }[] }
+
+      // Скачиваем каждый файл по отдельности
+      for (const { name, data } of json.files) {
+        const byteArray = Uint8Array.from(atob(data), c => c.charCodeAt(0))
+        const blob = new Blob([byteArray], { type: 'application/xml' })
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
-        // Пытаемся взять имя из заголовков или ставим дефолт
-        a.download = reports.length === 1 ? `${reports[0].file.name}` : "reports.xml"
+        a.download = name
         document.body.appendChild(a)
         a.click()
         a.remove()
         window.URL.revokeObjectURL(url)
-
-        addLog('✓ Файл успешно сформирован и скачан', 'ok')
-        setProcessed(true)
-      } else {
-        // Ошибка: читаем JSON ответ с ошибкой
-        const err = await res.json()
-        addLog(`✗ Ошибка сервера: ${err.error || 'Неизвестная ошибка'}`, 'err')
+        addLog(`✓ Скачан: ${name}`, 'ok')
       }
-    } catch (e: any) {
-      addLog(`✗ Ошибка сети: ${e.message}`, 'err')
-    } finally {
-      setRunning(false)
+
+      setProcessed(true)
+    } else {
+      const err = await res.json()
+      addLog(`✗ Ошибка сервера: ${err.error || 'Неизвестная ошибка'}`, 'err')
     }
+  } catch (e: any) {
+    addLog(`✗ Ошибка сети: ${e.message}`, 'err')
+  } finally {
+    setRunning(false)
   }
+}
 
   const ready = notifs.length > 0 && reports.length > 0 && !running
 
