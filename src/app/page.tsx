@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef } from 'react'
+import JSZip from 'jszip'
 import {
   FileText, Bell, Zap, RotateCcw, Download, X, CheckCircle2,
   Info, ChevronRight, Loader2
@@ -211,6 +212,7 @@ export default function Home() {
   const formData = new FormData()
   notifs.forEach(f => formData.append('notifications', f.file))
   reports.forEach(f => formData.append('reports', f.file))
+  console.log('Файлов перед отправкой:', formData.getAll('reports').length)
 
   try {
     const res = await fetch('/api/process-reports', {
@@ -219,23 +221,38 @@ export default function Home() {
     })
 
     if (res.ok) {
-      const json = await res.json() as { files: { name: string; data: string }[] }
+      const json = await res.json() as { files: { name: string; data?: string; error?: string }[] }
+      const zip = new JSZip()
+      let successCount = 0
 
-      // Скачиваем каждый файл по отдельности
-      for (const { name, data } of json.files) {
-        const byteArray = Uint8Array.from(atob(data), c => c.charCodeAt(0))
-        const blob = new Blob([byteArray], { type: 'application/xml' })
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = name
-        document.body.appendChild(a)
-        a.click()
-        a.remove()
-        window.URL.revokeObjectURL(url)
-        addLog(`✓ Скачан: ${name}`, 'ok')
+      for (const item of json.files) {
+        if (!item.data) {
+          addLog(`✗ Ошибка обработки ${item.name}: ${item.error || 'нет данных файла'}`, 'err')
+          continue
+        }
+
+        const byteArray = Uint8Array.from(atob(item.data), c => c.charCodeAt(0))
+        zip.file(item.name, byteArray)
+        successCount += 1
+        addLog(`✓ Подготовлен: ${item.name}`, 'ok')
       }
 
+      if (successCount === 0) {
+        addLog('✗ Нет успешно собранных отчётов для скачивания', 'err')
+        return
+      }
+
+      const zipBlob = await zip.generateAsync({ type: 'blob' })
+      const url = window.URL.createObjectURL(zipBlob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `updated-reports-${Date.now()}.zip`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      window.URL.revokeObjectURL(url)
+
+      addLog(`✓ Скачан ZIP: ${successCount} файл(ов)`, 'ok')
       setProcessed(true)
     } else {
       const err = await res.json()
