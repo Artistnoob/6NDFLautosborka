@@ -39,7 +39,18 @@ function findAll(obj: any, key: string): any[] {
   return results;
 }
 
-export function updateReport(parsed: any, fromNotif: Record<string, Record<string, number>>) {
+function sumNotifByKbk(fromNotif: Record<string, Record<string, number>>, kbk: string): number {
+  const slots = fromNotif[kbk];
+  if (!slots) return 0;
+  return Object.values(slots).reduce((acc, v) => acc + Math.round(v), 0);
+}
+
+export function updateReport(
+  parsed: any,
+  fromNotif: Record<string, Record<string, number>>,
+  prevSumNalUderzhByKbk: Record<string, number> = {},
+  usePrevPeriod = false,
+) {
   // --- Раздел 1: ОбязНА ---
   const obiazNA = findAll(parsed, 'ОбязНА');
   for (const ob of obiazNA) {
@@ -49,13 +60,16 @@ export function updateReport(parsed: any, fromNotif: Record<string, Record<strin
     if (sved) {
       if (!sved.$) sved.$ = {};
 
-      let total160 = 0;
       for (const [slot, attr] of Object.entries(SLOT_TO_SEC1)) {
         const val = fromNotif[kbk]?.[slot] || 0;
         sved.$[attr] = String(Math.round(val));
-        total160 += Math.round(val);
       }
-      ob.$.СумНалУд = String(total160);
+
+      const notifTotal = sumNotifByKbk(fromNotif, kbk);
+      const combinedTotal = usePrevPeriod
+        ? notifTotal + Math.round(prevSumNalUderzhByKbk[kbk] || 0)
+        : notifTotal;
+      ob.$.СумНалУд = String(combinedTotal);
     }
   }
 
@@ -70,16 +84,19 @@ export function updateReport(parsed: any, fromNotif: Record<string, Record<strin
     r.$.СумНалНеУдерж = "0";
     r.$.СумНалИзлУдерж = "0";
 
-    // Сброс и заполнение полей удержанного налога (021-026)
-    let total160 = 0;
+    // Сброс и заполнение полей удержанного налога (021-026) — только из уведомлений
     for (const [slot, attr] of Object.entries(SLOT_TO_SEC2)) {
       const val = fromNotif[kbk]?.[slot] || 0;
       r.$[attr] = String(Math.round(val));
-      total160 += Math.round(val);
     }
 
-    // Расчет зависимых полей
-    const sum140 = total160;
+    const notifTotal = sumNotifByKbk(fromNotif, kbk);
+    const combinedTotal = usePrevPeriod
+      ? notifTotal + Math.round(prevSumNalUderzhByKbk[kbk] || 0)
+      : notifTotal;
+
+    // Расчет зависимых полей от итога (уведомления + прошлый период)
+    const sum140 = combinedTotal;
     const sum131 = stavka > 0
       ? Math.round((sum140 / stavka) * 100) / 100
       : 0;
@@ -87,7 +104,7 @@ export function updateReport(parsed: any, fromNotif: Record<string, Record<strin
     const sum130 = parseNum(r.$.СумВыч || '0');
     const sum120 = Math.round((sum131 + sum130) * 100) / 100;
 
-    r.$.СумНалУдерж = String(total160);
+    r.$.СумНалУдерж = String(combinedTotal);
     r.$.СумНалИсч = String(sum140);
     r.$.НалБаза = sum131.toFixed(2);
     r.$.СумНачислНач = sum120.toFixed(2);

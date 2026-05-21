@@ -3,9 +3,14 @@
 import { useState, useCallback, useRef } from 'react'
 import JSZip from 'jszip'
 import {
-  FileText, Bell, Zap, RotateCcw, Download, X, CheckCircle2,
-  Info, ChevronRight, Loader2
+  FileText, Bell, Zap, RotateCcw, X, CheckCircle2,
+  Info, ChevronRight, Loader2, History
 } from 'lucide-react'
+import {
+  ALL_MATCH_FIELDS,
+  MATCH_FIELD_LABELS,
+  type MatchField,
+} from '@/lib/matching'
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -146,6 +151,39 @@ function StepCard({
   )
 }
 
+function ExcludePanel({
+  excluded,
+  onToggle,
+}: {
+  excluded: Set<MatchField>
+  onToggle: (field: MatchField) => void
+}) {
+  return (
+    <aside className="fixed top-20 left-4 z-20 w-52 bg-surface border border-border rounded-xl p-4 shadow-lg hidden lg:block">
+      <div className="text-xs font-semibold text-[#e8e9f0] mb-3">Исключить для заполнения</div>
+      <div className="flex flex-col gap-2">
+        {ALL_MATCH_FIELDS.map((field) => (
+          <label
+            key={field}
+            className="flex items-center gap-2 text-xs text-muted cursor-pointer hover:text-[#e8e9f0] transition-colors"
+          >
+            <input
+              type="checkbox"
+              checked={excluded.has(field)}
+              onChange={() => onToggle(field)}
+              className="rounded border-border-hi accent-accent"
+            />
+            <span>{MATCH_FIELD_LABELS[field]}</span>
+          </label>
+        ))}
+      </div>
+      <p className="text-[10px] text-muted mt-3 leading-relaxed">
+        Отмеченные поля не участвуют в сопоставлении отчётов с уведомлениями. На отчёты прошлого периода не влияет.
+      </p>
+    </aside>
+  )
+}
+
 function LogLine({ entry }: { entry: LogEntry }) {
   const colors = {
     ok:   'text-success',
@@ -163,9 +201,13 @@ function LogLine({ entry }: { entry: LogEntry }) {
 
 // ─── Main Page ───────────────────────────────────────────────────────────────
 
+type FileBucket = 'notifs' | 'reports' | 'prevReports'
+
 export default function Home() {
   const [notifs,  setNotifs]  = useState<UploadedFile[]>([])
   const [reports, setReports] = useState<UploadedFile[]>([])
+  const [prevReports, setPrevReports] = useState<UploadedFile[]>([])
+  const [excluded, setExcluded] = useState<Set<MatchField>>(new Set())
   const [logs,    setLogs]    = useState<LogEntry[]>([])
   const [processed, setProcessed] = useState(false)
   const [running, setRunning] = useState(false)
@@ -179,9 +221,14 @@ export default function Home() {
     })
   }, [])
 
-  const addFiles = (key: 'notifs' | 'reports', files: File[]) => {
-    const setter = key === 'notifs' ? setNotifs : setReports
-    setter(prev => {
+  const setters: Record<FileBucket, React.Dispatch<React.SetStateAction<UploadedFile[]>>> = {
+    notifs: setNotifs,
+    prevReports: setPrevReports,
+    reports: setReports,
+  }
+
+  const addFiles = (key: FileBucket, files: File[]) => {
+    setters[key](prev => {
       const existingKeys = new Set(prev.map(f => f.file.name + f.file.size))
       const fresh = files.filter(f => !existingKeys.has(f.name + f.size))
       return [...prev, ...fresh.map(f => ({ id: uid(), file: f }))]
@@ -189,15 +236,26 @@ export default function Home() {
     setProcessed(false)
   }
 
-  const removeFile = (key: 'notifs' | 'reports', id: string) => {
-    const setter = key === 'notifs' ? setNotifs : setReports
-    setter(prev => prev.filter(f => f.id !== id))
+  const removeFile = (key: FileBucket, id: string) => {
+    setters[key](prev => prev.filter(f => f.id !== id))
+    setProcessed(false)
+  }
+
+  const toggleExclude = (field: MatchField) => {
+    setExcluded(prev => {
+      const next = new Set(prev)
+      if (next.has(field)) next.delete(field)
+      else next.add(field)
+      return next
+    })
     setProcessed(false)
   }
 
   const reset = () => {
     setNotifs([])
+    setPrevReports([])
     setReports([])
+    setExcluded(new Set())
     setLogs([])
     setProcessed(false)
   }
@@ -211,8 +269,19 @@ export default function Home() {
 
   const formData = new FormData()
   notifs.forEach(f => formData.append('notifications', f.file))
+  prevReports.forEach(f => formData.append('prevReports', f.file))
   reports.forEach(f => formData.append('reports', f.file))
+  formData.append('excludeMatch', JSON.stringify([...excluded]))
   console.log('Файлов перед отправкой:', formData.getAll('reports').length)
+  if (prevReports.length > 0) {
+    addLog(`Учтены отчёты прошлого периода: ${prevReports.length} файл(ов)`, 'info')
+  }
+  if (excluded.size > 0) {
+    addLog(
+      `Исключены из сопоставления: ${[...excluded].map(f => MATCH_FIELD_LABELS[f]).join(', ')}`,
+      'info',
+    )
+  }
 
   try {
     const res = await fetch('/api/process-reports', {
@@ -271,8 +340,12 @@ export default function Home() {
   const step2Status = reports.length > 0 ? 'done' : notifs.length > 0 ? 'active' : 'idle'
   const step3Status = processed ? 'done' : (ready || running) ? 'active' : 'idle'
 
+  const excludedList = [...excluded]
+
   return (
     <div className="min-h-screen bg-bg">
+      <ExcludePanel excluded={excluded} onToggle={toggleExclude} />
+
       <header className="border-b border-border bg-surface sticky top-0 z-10">
         <div className="max-w-3xl mx-auto px-6 py-4 flex items-center gap-3">
           <div className="w-9 h-9 bg-accent rounded-xl flex items-center justify-center font-mono text-sm font-medium text-white flex-shrink-0">
@@ -285,7 +358,23 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-6 py-12">
+      <main className="max-w-3xl mx-auto px-6 py-12 lg:pl-60">
+        <div className="lg:hidden mb-6 bg-surface border border-border rounded-xl p-4">
+          <div className="text-xs font-semibold text-[#e8e9f0] mb-3">Исключить для заполнения</div>
+          <div className="flex flex-col gap-2">
+            {ALL_MATCH_FIELDS.map((field) => (
+              <label key={field} className="flex items-center gap-2 text-xs text-muted cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={excluded.has(field)}
+                  onChange={() => toggleExclude(field)}
+                  className="rounded border-border-hi accent-accent"
+                />
+                <span>{MATCH_FIELD_LABELS[field]}</span>
+              </label>
+            ))}
+          </div>
+        </div>
         <div className="mb-10">
           <h1 className="text-3xl font-bold tracking-tight mb-2">Обновление отчётов</h1>
           <p className="text-muted text-sm">
@@ -320,7 +409,32 @@ export default function Home() {
           </div>
 
           <StepCard
-            number="2" title="Отчёты 6-НДФЛ" status={step2Status}
+            number="2" title="Отчёты прошлого периода" status={prevReports.length > 0 ? 'done' : 'idle'}
+            desc="Необязательно. Сопоставление по ИНН, КПП, ОКТМО и отчётному году (код Период может отличаться)"
+            badge={prevReports.length > 0 ? `${prevReports.length} файл${plural(prevReports.length)}` : 'не загружены'}
+          >
+            <DropZone
+              label="XML-отчёты прошлого периода"
+              hint="*.xml • необязательно"
+              icon={History}
+              onFiles={f => addFiles('prevReports', f)}
+            />
+            {prevReports.length > 0 && (
+              <div className="flex flex-col gap-2">
+                {prevReports.map(f => (
+                  <FileItem key={f.id} name={f.file.name} size={f.file.size}
+                    onRemove={() => removeFile('prevReports', f.id)} />
+                ))}
+              </div>
+            )}
+          </StepCard>
+
+          <div className="flex justify-center">
+            <ChevronRight className="w-5 h-5 text-border-hi rotate-90" />
+          </div>
+
+          <StepCard
+            number="3" title="Отчёты 6-НДФЛ" status={step2Status}
             desc="XML-файлы отчётов, которые нужно обновить"
             badge={reports.length > 0 ? `${reports.length} файл${plural(reports.length)}` : '0 файлов'}
           >
@@ -345,7 +459,7 @@ export default function Home() {
           </div>
 
           <StepCard
-            number="3" title="Собрать отчёты" status={step3Status}
+            number="4" title="Собрать отчёты" status={step3Status}
             desc="Заполнить строки и скачать обновлённый XML-файл"
             badge={
               running ? 'обработка...'
@@ -392,6 +506,12 @@ export default function Home() {
           <Info className="w-4 h-4 text-accent-hi flex-shrink-0 mt-0.5" />
           <p className="text-xs text-muted leading-relaxed">
             Обработка XML происходит на сервере. Система конвертирует результат в кодировку Windows-1251 для корректной работы с ПО ФНС.
+            {excludedList.length > 0 && (
+              <> Исключены из сопоставления: {excludedList.map(f => MATCH_FIELD_LABELS[f]).join(', ')}.</>
+            )}
+            {prevReports.length > 0 && (
+              <> СумНалУдерж из {prevReports.length} отчёта(ов) прошлого периода суммируется с уведомлениями по КБК.</>
+            )}
           </p>
         </div>
       </main>
