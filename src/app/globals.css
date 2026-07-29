@@ -15,6 +15,11 @@ body {
   background-color: #0e0f13;
   color: #e8e9f0;
   font-family: var(--font-onest), sans-serif;
+  transition: background-color 0.5s ease, color 0.5s ease;
+}
+
+body.theme-annual {
+  background-color: #14080b;
 }
 
 /* Custom scrollbar */

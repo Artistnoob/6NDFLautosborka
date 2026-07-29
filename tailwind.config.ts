@@ -23,6 +23,14 @@ const config: Config = {
         success:   '#40c57a',
         danger:    '#f06464',
         warning:   '#f0b64e',
+        annual: {
+          bg:        '#14080b',
+          surface:   '#1f0d12',
+          border:    '#3a1820',
+          'border-hi': '#4d2030',
+          accent:    '#c44d5a',
+          'accent-hi': '#e06572',
+        },
       },
       animation: {
         'fade-in': 'fadeIn .3s ease forwards',
