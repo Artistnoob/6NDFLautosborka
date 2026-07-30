@@ -6,6 +6,7 @@ import { processAnnualReportsBatch } from '@/lib/annualProcessor';
 import {
   extractReportMeta,
   parseExcludedFields,
+  type MatchField,
   type NotifRecord,
   type ReportMeta,
 } from '@/lib/matching';
