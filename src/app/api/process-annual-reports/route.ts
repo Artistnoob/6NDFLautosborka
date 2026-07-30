@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import xml2js from 'xml2js';
 import iconv from 'iconv-lite';
+import JSZip from 'jszip';
 import { processAnnualReportsBatch } from '@/lib/annualProcessor';
 import {
   extractReportMeta,
@@ -11,6 +12,24 @@ import {
 import { findAll } from '@/lib/xmlUtils';
 
 export const maxDuration = 300;
+
+interface XmlInput {
+  name: string;
+  data: Buffer;
+}
+
+interface ZipManifestEntry {
+  name: string;
+  path: string;
+}
+
+interface AnnualZipManifest {
+  reports: ZipManifestEntry[];
+  notifications: ZipManifestEntry[];
+  prevReports: ZipManifestEntry[];
+  excludeMatch: MatchField[];
+  taxOverrides: Record<string, number>;
+}
 
 function getAttr(obj: any, tag: string, attr: string): string | undefined {
   const nodes = findAll(obj, tag);
@@ -76,27 +95,77 @@ function extractAnnualPrevSumNalUderzhByKbk(parsed: any): Record<string, number>
   return byKbk;
 }
 
-async function parseXmlFile(file: File): Promise<any> {
-  const buf = Buffer.from(await file.arrayBuffer());
-  const xml = iconv.decode(buf, 'win1251');
+async function parseXmlInput(input: XmlInput): Promise<any> {
+  const xml = iconv.decode(input.data, 'win1251');
   return xml2js.parseStringPromise(xml);
+}
+
+async function fileToInput(file: File): Promise<XmlInput> {
+  return {
+    name: file.name,
+    data: Buffer.from(await file.arrayBuffer()),
+  };
+}
+
+async function readZipInputs(
+  zip: JSZip,
+  entries: ZipManifestEntry[],
+): Promise<XmlInput[]> {
+  const result: XmlInput[] = [];
+  for (const entry of entries) {
+    const zippedFile = zip.file(entry.path);
+    if (!zippedFile) throw new Error(`В архиве отсутствует файл ${entry.name}`);
+    result.push({
+      name: entry.name,
+      data: await zippedFile.async('nodebuffer'),
+    });
+  }
+  return result;
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const formData = await req.formData();
-    const reportFiles = formData.getAll('reports') as File[];
-    const notifFiles = formData.getAll('notifications') as File[];
-    const prevFiles = formData.getAll('prevReports') as File[];
-    const excluded = parseExcludedFields(formData.get('excludeMatch') as string | null);
-    const taxOverrides = parseTaxOverrides(formData.get('taxOverrides'));
+    const isZipRequest = req.headers.get('content-type')?.includes('application/zip') ?? false;
+    let reportFiles: XmlInput[];
+    let notifFiles: XmlInput[];
+    let prevFiles: XmlInput[];
+    let excluded: Set<MatchField>;
+    let taxOverrides: Record<string, number>;
+
+    if (isZipRequest) {
+      const zip = await JSZip.loadAsync(Buffer.from(await req.arrayBuffer()));
+      const manifestFile = zip.file('manifest.json');
+      if (!manifestFile) throw new Error('В архиве отсутствует manifest.json');
+      const manifest = JSON.parse(
+        await manifestFile.async('string'),
+      ) as AnnualZipManifest;
+
+      reportFiles = await readZipInputs(zip, manifest.reports ?? []);
+      notifFiles = await readZipInputs(zip, manifest.notifications ?? []);
+      prevFiles = await readZipInputs(zip, manifest.prevReports ?? []);
+      excluded = parseExcludedFields(JSON.stringify(manifest.excludeMatch ?? []));
+      taxOverrides = parseTaxOverrides(JSON.stringify(manifest.taxOverrides ?? {}));
+    } else {
+      const formData = await req.formData();
+      reportFiles = await Promise.all(
+        (formData.getAll('reports') as File[]).map(fileToInput),
+      );
+      notifFiles = await Promise.all(
+        (formData.getAll('notifications') as File[]).map(fileToInput),
+      );
+      prevFiles = await Promise.all(
+        (formData.getAll('prevReports') as File[]).map(fileToInput),
+      );
+      excluded = parseExcludedFields(formData.get('excludeMatch') as string | null);
+      taxOverrides = parseTaxOverrides(formData.get('taxOverrides'));
+    }
 
     if (reportFiles.length === 0) throw new Error('Годовые отчёты не выбраны');
 
     const allNotifRecords: NotifRecord[] = [];
     for (const f of notifFiles) {
       try {
-        const parsed = await parseXmlFile(f);
+        const parsed = await parseXmlInput(f);
         allNotifRecords.push(...extractNotifRecords(parsed));
       } catch (e) {
         console.error(`Ошибка в уведомлении ${f.name}:`, e);
@@ -106,7 +175,7 @@ export async function POST(req: NextRequest) {
     const prevReports: { meta: ReportMeta; sumNalUderzhByKbk: Record<string, number> }[] = [];
     for (const f of prevFiles) {
       try {
-        const parsed = await parseXmlFile(f);
+        const parsed = await parseXmlInput(f);
         prevReports.push({
           meta: extractReportMeta(parsed),
           sumNalUderzhByKbk: extractAnnualPrevSumNalUderzhByKbk(parsed),
@@ -121,7 +190,7 @@ export async function POST(req: NextRequest) {
     const reportNames: string[] = [];
 
     for (const reportFile of reportFiles) {
-      const parsed = await parseXmlFile(reportFile);
+      const parsed = await parseXmlInput(reportFile);
       parsedReports.push(parsed);
       reportMetas.push(extractReportMeta(parsed));
       reportNames.push(reportFile.name);
@@ -152,20 +221,43 @@ export async function POST(req: NextRequest) {
     });
 
     const resultFiles: { name: string; data?: string; error?: string }[] = [];
+    const outputZip = isZipRequest ? new JSZip() : null;
 
     for (let i = 0; i < parsedReports.length; i++) {
       try {
         const finalXml = builder.buildObject(parsedReports[i]);
-        resultFiles.push({
-          name: reportNames[i],
-          data: iconv.encode(finalXml, 'win1251').toString('base64'),
-        });
+        const encoded = iconv.encode(finalXml, 'win1251');
+        if (outputZip) {
+          outputZip.file(reportNames[i], encoded);
+        } else {
+          resultFiles.push({
+            name: reportNames[i],
+            data: encoded.toString('base64'),
+          });
+        }
       } catch (err: any) {
         resultFiles.push({
           name: reportNames[i],
           error: err.message || 'Неизвестная ошибка при обработке XML',
         });
       }
+    }
+
+    if (outputZip) {
+      if (resultFiles.length > 0) {
+        outputZip.file('errors.json', JSON.stringify(resultFiles, null, 2));
+      }
+      const zipBuffer = await outputZip.generateAsync({
+        type: 'nodebuffer',
+        compression: 'DEFLATE',
+        compressionOptions: { level: 6 },
+      });
+      return new Response(new Uint8Array(zipBuffer), {
+        headers: {
+          'Content-Type': 'application/zip',
+          'Content-Disposition': 'attachment; filename="annual-reports.zip"',
+        },
+      });
     }
 
     return new Response(JSON.stringify({ files: resultFiles }), {

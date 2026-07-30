@@ -227,6 +227,17 @@ async function downloadZip(files: { name: string; data?: string; error?: string 
   return successCount
 }
 
+function downloadBlob(blob: Blob, name: string) {
+  const url = window.URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = name
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  window.URL.revokeObjectURL(url)
+}
+
 export default function Home() {
   const [mode, setMode] = useState<ReportMode>('quarterly')
 
@@ -355,18 +366,47 @@ export default function Home() {
     setAnnualRunning(true); setAnnualLogs([])
     setAnnualTaxIssues([])
     addLog(`Запуск годовой сборки: ${annualReports.length} отчёт(ов)...`, 'info', true)
-    const formData = new FormData()
-    annualNotifs.forEach(f => formData.append('notifications', f.file))
-    annualPrevReports.forEach(f => formData.append('prevReports', f.file))
-    annualReports.forEach(f => formData.append('reports', f.file))
-    formData.append('excludeMatch', JSON.stringify([...annualExcluded]))
-    formData.append('taxOverrides', JSON.stringify(taxOverrides))
     try {
-      const res = await fetch('/api/process-annual-reports', { method: 'POST', body: formData })
+      const requestZip = new JSZip()
+      const addFilesToZip = (folder: string, files: UploadedFile[]) =>
+        files.map((uploaded, index) => {
+          const path = `${folder}/${index}.xml`
+          requestZip.file(path, uploaded.file)
+          return { name: uploaded.file.name, path }
+        })
+      const manifest = {
+        reports: addFilesToZip('reports', annualReports),
+        notifications: addFilesToZip('notifications', annualNotifs),
+        prevReports: addFilesToZip('prev-reports', annualPrevReports),
+        excludeMatch: [...annualExcluded],
+        taxOverrides,
+      }
+      requestZip.file('manifest.json', JSON.stringify(manifest))
+      const requestBody = await requestZip.generateAsync({
+        type: 'blob',
+        compression: 'DEFLATE',
+        compressionOptions: { level: 6 },
+      })
+
+      const res = await fetch('/api/process-annual-reports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/zip' },
+        body: requestBody,
+      })
       if (!res.ok) {
-        const errorBody = await res.json() as {
+        const errorText = await res.text()
+        let errorBody: {
           error?: string
           issues?: Omit<AnnualTaxIssue, 'targetValue' | 'fixed'>[]
+        }
+        try {
+          errorBody = JSON.parse(errorText)
+        } catch {
+          errorBody = {
+            error: res.status === 413
+              ? 'Размер даже сжатого архива превышает лимит Vercel 4,5 МБ'
+              : errorText || `HTTP ${res.status}`,
+          }
         }
         if (res.status === 422 && errorBody.issues?.length) {
           setAnnualTaxIssues(errorBody.issues.map(issue => ({
@@ -380,6 +420,16 @@ export default function Home() {
         addLog(`✗ Ошибка сервера: ${errorBody.error || 'Неизвестная ошибка'}`, 'err', true)
         return
       }
+
+      if (res.headers.get('content-type')?.includes('application/zip')) {
+        const resultZip = await res.blob()
+        downloadBlob(resultZip, `annual-reports-${Date.now()}.zip`)
+        annualReports.forEach(item => addLog(`✓ Подготовлен: ${item.file.name}`, 'ok', true))
+        addLog(`✓ Скачан ZIP: ${annualReports.length} файл${plural(annualReports.length)}`, 'ok', true)
+        setAnnualProcessed(true)
+        return
+      }
+
       const json = await res.json() as { files: { name: string; data?: string; error?: string }[] }
       for (const item of json.files) {
         if (!item.data) addLog(`✗ ${item.name}: ${item.error || 'нет данных'}`, 'err', true)
