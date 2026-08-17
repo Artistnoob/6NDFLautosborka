@@ -22,6 +22,10 @@ body.theme-annual {
   background-color: #14080b;
 }
 
+body.theme-reconciliation {
+  background-color: #010806;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }

@@ -31,6 +31,14 @@ const config: Config = {
           accent:    '#c44d5a',
           'accent-hi': '#e06572',
         },
+        reconciliation: {
+          bg:        '#010806',
+          surface:   '#04110e',
+          border:    '#08271f',
+          'border-hi': '#0d4539',
+          accent:    '#009b79',
+          'accent-hi': '#00bb91',
+        },
       },
       animation: {
         'fade-in': 'fadeIn .3s ease forwards',

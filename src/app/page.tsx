@@ -4,15 +4,16 @@ import { useState, useCallback, useRef, useEffect } from 'react'
 import JSZip from 'jszip'
 import {
   FileText, Bell, Zap, RotateCcw, X, CheckCircle2,
-  Info, ChevronRight, Loader2, History, Calendar, CalendarRange
+  Info, ChevronRight, Loader2, History, Calendar, CalendarRange, Scale
 } from 'lucide-react'
+import NdflReconciliation from '@/app/NdflReconciliation'
 import {
   ALL_MATCH_FIELDS,
   MATCH_FIELD_LABELS,
   type MatchField,
 } from '@/lib/matching'
 
-type ReportMode = 'quarterly' | 'annual'
+type ReportMode = 'reconciliation' | 'quarterly' | 'annual'
 type FileBucket = 'notifs' | 'reports' | 'prevReports'
 
 interface UploadedFile {
@@ -182,11 +183,14 @@ function ModeToggle({ mode, onChange }: { mode: ReportMode; onChange: (m: Report
   const btn = (m: ReportMode, label: string, Icon: React.ElementType) => {
     const active = mode === m
     const annualActive = m === 'annual' && active
+    const reconciliationActive = m === 'reconciliation' && active
     return (
       <button
         onClick={() => onChange(m)}
         className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-          annualActive
+          reconciliationActive
+            ? 'bg-[#009b79] text-[#001f18] shadow-md shadow-[#009b79]/20'
+            : annualActive
             ? 'bg-annual-accent text-white shadow-lg shadow-annual-accent/30'
             : active
               ? 'bg-accent text-white shadow-lg shadow-accent/30'
@@ -199,6 +203,7 @@ function ModeToggle({ mode, onChange }: { mode: ReportMode; onChange: (m: Report
   }
   return (
     <div className="flex gap-2 flex-wrap">
+      {btn('reconciliation', 'Сверка НДФЛ', Scale)}
       {btn('quarterly', 'Квартальная отчётность', Calendar)}
       {btn('annual', 'Годовая отчётность', CalendarRange)}
     </div>
@@ -261,11 +266,16 @@ export default function Home() {
 
   const logEndRef = useRef<HTMLDivElement>(null)
   const isAnnual = mode === 'annual'
+  const isReconciliation = mode === 'reconciliation'
 
   useEffect(() => {
     document.body.classList.toggle('theme-annual', isAnnual)
-    return () => document.body.classList.remove('theme-annual')
-  }, [isAnnual])
+    document.body.classList.toggle('theme-reconciliation', isReconciliation)
+    return () => {
+      document.body.classList.remove('theme-annual')
+      document.body.classList.remove('theme-reconciliation')
+    }
+  }, [isAnnual, isReconciliation])
 
   const addLog = useCallback((text: string, type: LogEntry['type'] = 'info', annual = false) => {
     const setter = annual ? setAnnualLogs : setLogs
@@ -639,7 +649,9 @@ export default function Home() {
   }
 
   return (
-    <div className={`min-h-screen transition-colors duration-500 ${isAnnual ? 'bg-annual-bg' : 'bg-bg'}`}>
+    <div className={`min-h-screen transition-colors duration-500 ${
+      isAnnual ? 'bg-annual-bg' : isReconciliation ? 'bg-reconciliation-bg' : 'bg-bg'
+    }`}>
       {isAnnual && annualTaxIssues.length > 0 && (
         <div className="fixed inset-0 z-50 bg-black/70 p-4 flex items-center justify-center">
           <div className="w-full max-w-4xl max-h-[90vh] overflow-hidden rounded-2xl border border-annual-border-hi bg-annual-surface shadow-2xl flex flex-col">
@@ -735,14 +747,28 @@ export default function Home() {
         </div>
       )}
 
-      {isAnnual
-        ? <ExcludePanel annual excluded={annualExcluded} onToggle={f => toggleExclude(f, true)} />
-        : <ExcludePanel excluded={excluded} onToggle={f => toggleExclude(f, false)} />}
+      {!isReconciliation && (
+        isAnnual
+          ? <ExcludePanel annual excluded={annualExcluded} onToggle={f => toggleExclude(f, true)} />
+          : <ExcludePanel excluded={excluded} onToggle={f => toggleExclude(f, false)} />
+      )}
 
-      <header className={`border-b sticky top-0 z-10 transition-colors duration-500 ${isAnnual ? 'border-annual-border bg-annual-surface' : 'border-border bg-surface'}`}>
-        <div className="max-w-3xl mx-auto px-6 py-4 flex flex-col gap-4">
+      <header className={`border-b sticky top-0 z-10 transition-colors duration-500 ${
+        isAnnual
+          ? 'border-annual-border bg-annual-surface'
+          : isReconciliation
+            ? 'border-reconciliation-border bg-reconciliation-surface'
+            : 'border-border bg-surface'
+      }`}>
+        <div className={`${isReconciliation ? 'max-w-7xl' : 'max-w-3xl'} mx-auto px-6 py-4 flex flex-col gap-4`}>
           <div className="flex items-center gap-3">
-            <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-mono text-sm font-medium text-white flex-shrink-0 ${isAnnual ? 'bg-annual-accent' : 'bg-accent'}`}>НД</div>
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-mono text-sm font-medium flex-shrink-0 ${
+              isAnnual
+                ? 'bg-annual-accent text-white'
+                : isReconciliation
+                  ? 'bg-reconciliation-accent text-[#102713]'
+                  : 'bg-accent text-white'
+            }`}>НД</div>
             <div className="flex-1">
               <div className="font-semibold text-[15px] leading-none">6-НДФЛ Updater</div>
               <div className="text-xs text-muted mt-0.5">Обновление отчётов по уведомлениям</div>
@@ -752,8 +778,8 @@ export default function Home() {
         </div>
       </header>
 
-      <main className={`max-w-3xl mx-auto px-6 py-12 lg:pl-60 transition-colors duration-500`}>
-        {!isAnnual && (
+      <main className={`${isReconciliation ? 'max-w-7xl' : 'max-w-3xl lg:pl-60'} mx-auto px-6 py-12 transition-colors duration-500`}>
+        {!isAnnual && !isReconciliation && (
           <div className="lg:hidden mb-6 bg-surface border border-border rounded-xl p-4">
             <div className="text-xs font-semibold text-[#e8e9f0] mb-3">Исключить для заполнения</div>
             <div className="flex flex-col gap-2">
@@ -767,7 +793,11 @@ export default function Home() {
             </div>
           </div>
         )}
-        {isAnnual ? renderWorkflow(true) : renderWorkflow(false)}
+        {isReconciliation
+          ? <NdflReconciliation />
+          : isAnnual
+            ? renderWorkflow(true)
+            : renderWorkflow(false)}
       </main>
     </div>
   )
