@@ -128,41 +128,40 @@ function RankIcon({ rank }: { rank: number }) {
     1: {
       image: cyberdemonRank,
       title: 'Горящий кибердемон',
-      glow: 'text-[#ff174d] animate-pulse [filter:drop-shadow(0_0_5px_#ff174d)_drop-shadow(0_0_12px_#d50036)]',
+      glow: 'animate-pulse',
     },
     2: {
       image: arasakaRank,
       title: 'Арасака',
-      glow: 'text-[#ff2a3d] [filter:drop-shadow(0_0_4px_#ff2a3d)_drop-shadow(0_0_8px_#8f0018)]',
+      glow: '',
     },
     3: {
       image: yellowRuneRank,
       title: 'Золотая киберруна',
-      glow: 'text-[#fcee09] opacity-90 [filter:drop-shadow(0_0_3px_#fcee09)_drop-shadow(0_0_7px_#9b7500)]',
+      glow: 'opacity-90',
     },
   }
   const icon = icons[rank]
-  if (!icon) return <span className="h-10 w-10" aria-hidden="true" />
+  if (!icon) return <span className="h-8 w-8" aria-hidden="true" />
   return (
     <span
       title={icon.title}
-      className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${icon.glow}`}
+      className={`relative flex h-8 w-8 shrink-0 items-center justify-center ${icon.glow}`}
     >
       <Image
         src={icon.image}
         alt=""
-        width={40}
-        height={40}
+        width={32}
+        height={32}
         aria-hidden="true"
-        className="absolute h-10 w-10 scale-125 rounded-full object-cover opacity-75 blur-[6px] mix-blend-screen"
+        className="absolute h-8 w-8 scale-150 object-contain opacity-90 blur-[5px] mix-blend-screen"
       />
-      <span className="absolute inset-0 rounded-full border border-white/25 shadow-[inset_0_0_7px_rgba(255,255,255,.2),0_0_8px_currentColor]" />
       <Image
         src={icon.image}
         alt={icon.title}
-        width={40}
-        height={40}
-        className="relative h-10 w-10 rounded-full object-cover brightness-110 contrast-125"
+        width={32}
+        height={32}
+        className="relative h-8 w-8 object-contain brightness-125 contrast-150 mix-blend-screen"
       />
     </span>
   )
@@ -410,7 +409,7 @@ export default function Cyberpunk2077() {
 
       {leaderboardOpen && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm">
-          <section className="w-full max-w-xl border border-[#fcee09]/60 bg-[#07090d] shadow-[0_0_50px_rgba(252,238,9,.18)]">
+          <section className="cyber-leaderboard w-full max-w-xl border border-[#fcee09]/60 bg-[#07090d] shadow-[0_0_50px_rgba(252,238,9,.18)]">
             <div className="flex items-center justify-between border-b border-[#fcee09]/35 bg-[#fcee09] px-5 py-3 text-black">
               <div className="flex items-center gap-2 font-black italic tracking-widest">
                 <Trophy className="h-5 w-5" /> ТАБЛИЦА ЛЕГЕНД
@@ -433,7 +432,7 @@ export default function Cyberpunk2077() {
                 <ol className="space-y-2">
                   {leaderboard.map((entry, index) => (
                     <li key={entry.id}
-                      className={`grid grid-cols-[42px_40px_1fr_auto] items-center gap-2 border px-3 py-2 font-mono ${
+                      className={`grid grid-cols-[42px_34px_1fr_auto] items-center gap-2 border px-3 py-2 ${
                         index === 0
                           ? 'border-[#fcee09]/70 bg-[#fcee09]/10'
                           : index < 3
@@ -444,7 +443,13 @@ export default function Cyberpunk2077() {
                         #{index + 1}
                       </span>
                       <RankIcon rank={index + 1} />
-                      <span className="truncate text-sm text-[#d5e1e5]">{entry.nickname}</span>
+                      <span className={`truncate text-sm ${
+                        index === 0
+                          ? 'cyber-first-place-name font-bold text-[#ff657f]'
+                          : 'text-[#d5e1e5]'
+                      }`}>
+                        {entry.nickname}
+                      </span>
                       <span className="text-lg font-black text-[#00f0ff]">{entry.score}</span>
                     </li>
                   ))}

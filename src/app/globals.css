@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Onest:wght@300;400;500;600;700&family=Orbitron:wght@500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -85,4 +85,30 @@ body.theme-cyberpunk {
 
 @media (prefers-reduced-motion: reduce) {
   .cyber-code-symbol { animation: none; }
+}
+
+@keyframes cyber-first-place-glow {
+  0%, 100% {
+    color: #ff657f;
+    text-shadow: 0 0 3px rgba(255, 42, 109, 0.45);
+  }
+  50% {
+    color: #ff8da2;
+    text-shadow:
+      0 0 4px rgba(255, 42, 109, 0.7),
+      0 0 9px rgba(255, 23, 77, 0.35);
+  }
+}
+
+.cyber-leaderboard {
+  font-family: 'Orbitron', var(--font-jetbrains), monospace;
+  letter-spacing: 0.035em;
+}
+
+.cyber-first-place-name {
+  animation: cyber-first-place-glow 3.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cyber-first-place-name { animation: none; }
 }
