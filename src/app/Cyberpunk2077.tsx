@@ -2,9 +2,13 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import Image, { type StaticImageData } from 'next/image'
 import {
   Crown, Gamepad2, ListOrdered, MessageSquare, RotateCcw, Send, Trophy, UserRound, X,
 } from 'lucide-react'
+import cyberdemonRank from './cyberdemon-rank.png'
+import arasakaRank from './arasaka-rank.png'
+import yellowRuneRank from './yellow-rune-rank.png'
 
 type Direction = 'left' | 'right' | 'up' | 'down'
 
@@ -23,6 +27,11 @@ interface LeaderboardEntry {
 }
 
 const EMPTY_GRID = Array<number>(16).fill(0)
+const HACK_SYMBOLS = [
+  'BD 55 E9', 'RAM', '0xFF', 'ICE', '01 10', 'ROOT', 'E9', 'BREACH',
+  '55 BD', 'SYS', '0101', 'DAEMON', 'FF 1C', 'NET', '7A', 'ACCESS',
+  '1C E9', 'V', '1100', 'PING', 'BD', 'PROXY', '0x77', 'UPLOAD',
+]
 
 function readableSupabaseError(error: unknown): string {
   const message = error instanceof Error ? error.message : String(error)
@@ -111,50 +120,43 @@ function tileStyle(value: number): string {
 }
 
 function RankIcon({ rank }: { rank: number }) {
-  if (rank === 1) {
-    return (
-      <span
-        title="Горящий кибердемон"
-        className="flex h-8 w-8 items-center justify-center text-[#ff174d] [filter:drop-shadow(0_0_4px_#ff174d)_drop-shadow(0_0_10px_#d50036)] animate-pulse"
-      >
-        <svg viewBox="0 0 32 32" className="h-8 w-8" aria-hidden="true">
-          <path fill="currentColor" d="M7 4l6 5-2 3h10l-2-3 6-5-1 9 4 4-4 11H8L4 17l4-4L7 4z" />
-          <path fill="#07090d" d="M9 16l5 2-4 3-1-5zm14 0l-5 2 4 3 1-5zm-11 8h8l-4 3-4-3z" />
-          <path fill="#fcee09" d="M15 10h2l-1-7-1 7z" />
-        </svg>
-      </span>
-    )
+  const icons: Record<number, {
+    image: StaticImageData
+    title: string
+    glow: string
+  }> = {
+    1: {
+      image: cyberdemonRank,
+      title: 'Горящий кибердемон',
+      glow: 'animate-pulse [filter:drop-shadow(0_0_5px_#ff174d)_drop-shadow(0_0_12px_#d50036)]',
+    },
+    2: {
+      image: arasakaRank,
+      title: 'Арасака',
+      glow: '[filter:drop-shadow(0_0_4px_#ff2a3d)_drop-shadow(0_0_8px_#8f0018)]',
+    },
+    3: {
+      image: yellowRuneRank,
+      title: 'Золотая киберруна',
+      glow: 'opacity-90 [filter:drop-shadow(0_0_3px_#fcee09)_drop-shadow(0_0_7px_#9b7500)]',
+    },
   }
-  if (rank === 2) {
-    return (
-      <span
-        title="Неоновый пистолет"
-        className="flex h-8 w-8 items-center justify-center text-[#ff5b91] [filter:drop-shadow(0_0_4px_#ff2a6d)]"
-      >
-        <svg viewBox="0 0 32 32" className="h-7 w-7" aria-hidden="true">
-          <path fill="currentColor" d="M3 9h22l4 4-4 4h-8l-2 4 3 7h-7l-4-11H3V9z" />
-          <path fill="#07090d" d="M7 12h15v2H7v-2zm3 5h4l-2 4-2-4z" />
-          <path fill="#fcee09" d="M25 11h3v4h-3z" />
-        </svg>
-      </span>
-    )
-  }
-  if (rank === 3) {
-    return (
-      <span
-        title="Игральная нейрофишка"
-        className="flex h-8 w-8 items-center justify-center text-[#00b8c4] opacity-80 [filter:drop-shadow(0_0_3px_#00f0ff)]"
-      >
-        <svg viewBox="0 0 32 32" className="h-7 w-7" aria-hidden="true">
-          <circle cx="16" cy="16" r="13" fill="currentColor" />
-          <circle cx="16" cy="16" r="8" fill="#07151a" stroke="#67f8ff" strokeWidth="1.5" />
-          <path fill="currentColor" d="M14 10h4v3h-4zm0 9h4v3h-4zm-4-5h3v4h-3zm9 0h3v4h-3z" />
-          <path fill="#fcee09" d="M15 14h2v4h-2z" />
-        </svg>
-      </span>
-    )
-  }
-  return <span className="h-8 w-8" aria-hidden="true" />
+  const icon = icons[rank]
+  if (!icon) return <span className="h-10 w-10" aria-hidden="true" />
+  return (
+    <span
+      title={icon.title}
+      className={`relative flex h-10 w-10 shrink-0 items-center justify-center ${icon.glow}`}
+    >
+      <Image
+        src={icon.image}
+        alt={icon.title}
+        width={40}
+        height={40}
+        className="h-10 w-10 rounded-full object-cover"
+      />
+    </span>
+  )
 }
 
 export default function Cyberpunk2077() {
@@ -364,6 +366,22 @@ export default function Cyberpunk2077() {
           backgroundSize: '32px 32px',
         }}
       />
+      <div className="cyber-code-field pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+        {HACK_SYMBOLS.map((symbol, index) => (
+          <span
+            key={`${symbol}-${index}`}
+            className="cyber-code-symbol"
+            style={{
+              left: `${3 + ((index * 37) % 94)}%`,
+              animationDelay: `${-((index * 1.7) % 18)}s`,
+              animationDuration: `${13 + (index % 8)}s`,
+              fontSize: `${9 + (index % 4) * 2}px`,
+            }}
+          >
+            {symbol}
+          </span>
+        ))}
+      </div>
       <div className="relative border-b border-[#fcee09]/30 bg-[#fcee09] px-6 py-4 text-black">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
@@ -406,7 +424,7 @@ export default function Cyberpunk2077() {
                 <ol className="space-y-2">
                   {leaderboard.map((entry, index) => (
                     <li key={entry.id}
-                      className={`grid grid-cols-[42px_32px_1fr_auto] items-center gap-2 border px-3 py-2 font-mono ${
+                      className={`grid grid-cols-[42px_40px_1fr_auto] items-center gap-2 border px-3 py-2 font-mono ${
                         index === 0
                           ? 'border-[#fcee09]/70 bg-[#fcee09]/10'
                           : index < 3

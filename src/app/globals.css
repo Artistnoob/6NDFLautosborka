@@ -35,3 +35,54 @@ body.theme-cyberpunk {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #353747; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #5c7cfa; }
+
+@keyframes cyber-code-fall {
+  0% {
+    transform: translate3d(0, -14vh, 0) rotate(-2deg);
+    opacity: 0;
+  }
+  12% { opacity: 0.18; }
+  55% {
+    transform: translate3d(12px, 55vh, 0) rotate(2deg);
+    opacity: 0.1;
+  }
+  88% { opacity: 0.16; }
+  100% {
+    transform: translate3d(-8px, 118vh, 0) rotate(-1deg);
+    opacity: 0;
+  }
+}
+
+.cyber-code-field {
+  z-index: 0;
+  mask-image: linear-gradient(to bottom, transparent, black 12%, black 88%, transparent);
+}
+
+.cyber-code-symbol {
+  position: absolute;
+  top: -12%;
+  color: #00f0ff;
+  font-family: var(--font-jetbrains), monospace;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+  opacity: 0;
+  text-shadow: 0 0 5px rgba(0, 240, 255, 0.75);
+  animation-name: cyber-code-fall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.cyber-code-symbol:nth-child(3n) {
+  color: #fcee09;
+  text-shadow: 0 0 5px rgba(252, 238, 9, 0.65);
+}
+
+.cyber-code-symbol:nth-child(5n) {
+  color: #ff2a6d;
+  text-shadow: 0 0 5px rgba(255, 42, 109, 0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cyber-code-symbol { animation: none; }
+}
