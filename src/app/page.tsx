@@ -7,6 +7,13 @@ import {
   Info, ChevronRight, Loader2, History, Calendar, CalendarRange, Scale
 } from 'lucide-react'
 import NdflReconciliation from '@/app/NdflReconciliation'
+import PalettePicker, {
+  DEFAULT_SECTION_PALETTES,
+  sectionFilter,
+  type PaletteSection,
+  type SectionPalette,
+  type SectionPalettes,
+} from '@/app/PalettePicker'
 import {
   ALL_MATCH_FIELDS,
   MATCH_FIELD_LABELS,
@@ -245,6 +252,7 @@ function downloadBlob(blob: Blob, name: string) {
 
 export default function Home() {
   const [mode, setMode] = useState<ReportMode>('quarterly')
+  const [sectionPalettes, setSectionPalettes] = useState<SectionPalettes>(DEFAULT_SECTION_PALETTES)
 
   const [notifs, setNotifs] = useState<UploadedFile[]>([])
   const [reports, setReports] = useState<UploadedFile[]>([])
@@ -276,6 +284,44 @@ export default function Home() {
       document.body.classList.remove('theme-reconciliation')
     }
   }, [isAnnual, isReconciliation])
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('ndfl-section-colors')
+      if (saved) {
+        const parsed = JSON.parse(saved) as Record<string, string | Partial<SectionPalette>>
+        const migrated = { ...DEFAULT_SECTION_PALETTES }
+        for (const section of Object.keys(DEFAULT_SECTION_PALETTES) as PaletteSection[]) {
+          const value = parsed[section]
+          migrated[section] = typeof value === 'string'
+            ? { ...DEFAULT_SECTION_PALETTES[section], color: value }
+            : { ...DEFAULT_SECTION_PALETTES[section], ...(value ?? {}) }
+        }
+        setSectionPalettes(migrated)
+      }
+    } catch {
+      setSectionPalettes(DEFAULT_SECTION_PALETTES)
+    }
+  }, [])
+
+  const changeSectionPalette = (section: PaletteSection, values: Partial<SectionPalette>) => {
+    setSectionPalettes(prev => {
+      const next = {
+        ...prev,
+        [section]: { ...prev[section], ...values },
+      }
+      localStorage.setItem('ndfl-section-colors', JSON.stringify(next))
+      return next
+    })
+  }
+
+  const resetSectionPalette = (section: PaletteSection) => {
+    setSectionPalettes(prev => {
+      const next = { ...prev, [section]: { ...DEFAULT_SECTION_PALETTES[section] } }
+      localStorage.setItem('ndfl-section-colors', JSON.stringify(next))
+      return next
+    })
+  }
 
   const addLog = useCallback((text: string, type: LogEntry['type'] = 'info', annual = false) => {
     const setter = annual ? setAnnualLogs : setLogs
@@ -649,9 +695,17 @@ export default function Home() {
   }
 
   return (
+    <>
+    <PalettePicker
+      palettes={sectionPalettes}
+      onChange={changeSectionPalette}
+      onReset={resetSectionPalette}
+    />
     <div className={`min-h-screen transition-colors duration-500 ${
       isAnnual ? 'bg-annual-bg' : isReconciliation ? 'bg-reconciliation-bg' : 'bg-bg'
-    }`}>
+    }`} style={{
+      filter: sectionFilter(mode, sectionPalettes[mode]),
+    }}>
       {isAnnual && annualTaxIssues.length > 0 && (
         <div className="fixed inset-0 z-50 bg-black/70 p-4 flex items-center justify-center">
           <div className="w-full max-w-4xl max-h-[90vh] overflow-hidden rounded-2xl border border-annual-border-hi bg-annual-surface shadow-2xl flex flex-col">
@@ -800,5 +854,6 @@ export default function Home() {
             : renderWorkflow(false)}
       </main>
     </div>
+    </>
   )
 }

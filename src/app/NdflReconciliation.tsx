@@ -3,7 +3,10 @@
 import { useMemo, useState } from 'react'
 import { CheckCircle2, Scale, Users, FileSpreadsheet, AlertTriangle } from 'lucide-react'
 import {
+  checkProgressiveTax,
   compareReconciliation,
+  parsePastedTable,
+  type ProgressiveTaxCheckResult,
   type ReconciliationDimension,
   type ReconciliationMetric,
   type ReconciliationResult,
@@ -36,6 +39,23 @@ function PasteField({
   hint: string
   compact?: boolean
 }) {
+  const tableRows = useMemo(() => parsePastedTable(value), [value])
+  const visibleRows = tableRows.slice(0, 100)
+  const columnCount = Math.min(
+    30,
+    visibleRows.reduce((max, row) => Math.max(max, row.length), 0),
+  )
+  const columnName = (index: number) => {
+    let result = ''
+    let value = index + 1
+    while (value > 0) {
+      value--
+      result = String.fromCharCode(65 + (value % 26)) + result
+      value = Math.floor(value / 26)
+    }
+    return result
+  }
+
   return (
     <label className="flex flex-col gap-2">
       <span className="text-sm font-semibold text-[#e8e9f0]">{title}</span>
@@ -43,13 +63,56 @@ function PasteField({
         value={value}
         onChange={event => onChange(event.target.value)}
         placeholder={hint}
-        className={`${compact ? 'min-h-32' : 'min-h-72'} w-full resize-y rounded-xl border border-reconciliation-border-hi bg-reconciliation-bg px-4 py-3 font-mono text-xs leading-relaxed text-[#e8e9f0] outline-none transition-colors placeholder:text-muted/60 focus:border-reconciliation-accent`}
+        className={`${value ? 'min-h-24' : compact ? 'min-h-32' : 'min-h-72'} w-full resize-y rounded-xl border border-reconciliation-border-hi bg-reconciliation-bg px-4 py-3 font-mono text-xs leading-relaxed text-[#e8e9f0] outline-none transition-colors placeholder:text-muted/60 focus:border-reconciliation-accent`}
       />
+      {visibleRows.length > 0 && (
+        <div className="rounded-xl border border-reconciliation-border-hi bg-reconciliation-bg overflow-hidden">
+          <div className="max-h-80 overflow-auto">
+            <table className="min-w-full border-collapse font-mono text-[11px]">
+              <thead className="sticky top-0 z-10 bg-reconciliation-border">
+                <tr>
+                  <th className="w-10 border-r border-b border-reconciliation-border-hi px-2 py-1.5 text-muted" />
+                  {Array.from({ length: columnCount }, (_, index) => (
+                    <th key={index}
+                      className="min-w-32 border-r border-b border-reconciliation-border-hi px-3 py-1.5 text-center text-muted font-medium">
+                      {columnName(index)}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {visibleRows.map((row, rowIndex) => (
+                  <tr key={rowIndex} className={rowIndex === 0 ? 'bg-reconciliation-border/35' : ''}>
+                    <th className="sticky left-0 bg-reconciliation-border border-r border-b border-reconciliation-border-hi px-2 py-1.5 text-center text-muted font-medium">
+                      {rowIndex + 1}
+                    </th>
+                    {Array.from({ length: columnCount }, (_, columnIndex) => (
+                      <td key={columnIndex}
+                        className={`max-w-64 truncate border-r border-b border-reconciliation-border px-3 py-1.5 ${
+                          rowIndex === 0 ? 'font-semibold text-reconciliation-accent-hi' : 'text-[#e8e9f0]'
+                        }`}
+                        title={row[columnIndex] ?? ''}>
+                        {row[columnIndex] ?? ''}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {tableRows.length > visibleRows.length && (
+            <div className="border-t border-reconciliation-border px-3 py-2 text-[10px] text-muted">
+              Показаны первые {visibleRows.length} из {tableRows.length} строк.
+            </div>
+          )}
+        </div>
+      )}
     </label>
   )
 }
 
 export default function NdflReconciliation() {
+  const [tool, setTool] = useState<'comparison' | 'progressive'>('comparison')
   const [metric, setMetric] = useState<ReconciliationMetric>('income')
   const [dimension, setDimension] = useState<ReconciliationDimension>('employee')
   const [salaryText, setSalaryText] = useState('')
@@ -59,6 +122,8 @@ export default function NdflReconciliation() {
     () => Object.fromEntries(EXCESS_RATES.map(rate => [rate, { salary: '', ndfl: '' }])),
   )
   const [results, setResults] = useState<ResultSection[]>([])
+  const [progressiveText, setProgressiveText] = useState('')
+  const [progressiveResult, setProgressiveResult] = useState<ProgressiveTaxCheckResult | null>(null)
 
   const keyLabel = dimension === 'employee' ? 'сотрудникам' : 'регистраторам'
   const ndflColumn = metric === 'income' ? 'Начислено' : 'Исчислено до превыш'
@@ -132,6 +197,31 @@ export default function NdflReconciliation() {
         </div>
       </div>
 
+      <div className="rounded-xl border border-reconciliation-border bg-reconciliation-surface p-4 mb-5 flex flex-wrap gap-3">
+        <button
+          onClick={() => setTool('comparison')}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            tool === 'comparison'
+              ? 'bg-reconciliation-accent text-[#001f18]'
+              : 'bg-reconciliation-border text-muted hover:bg-reconciliation-border-hi'
+          }`}
+        >
+          Сверка данных
+        </button>
+        <button
+          onClick={() => setTool('progressive')}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            tool === 'progressive'
+              ? 'bg-reconciliation-accent text-[#001f18]'
+              : 'bg-reconciliation-border text-muted hover:bg-reconciliation-border-hi'
+          }`}
+        >
+          Проверка налога с превышения
+        </button>
+      </div>
+
+      {tool === 'comparison' && (
+        <>
       <div className="rounded-xl border border-reconciliation-border bg-reconciliation-surface p-5 mb-5">
         <div className="text-sm font-semibold mb-3">Что сравниваем</div>
         <div className="flex flex-wrap gap-3">
@@ -320,6 +410,121 @@ export default function NdflReconciliation() {
             </div>
           ))}
         </div>
+      )}
+        </>
+      )}
+
+      {tool === 'progressive' && (
+        <>
+          <div className="rounded-xl border border-reconciliation-border bg-reconciliation-surface p-5 mb-5">
+            <div className="font-semibold mb-1">Данные для проверки</div>
+            <p className="text-xs text-muted mb-4">
+              Вставьте таблицу с сотрудником, видом и суммой налоговой базы и исчисленным налогом по ставкам.
+              Пустой вид налоговой базы считается основной оплатой труда.
+            </p>
+            <PasteField
+              title="Анализ НДФЛ"
+              value={progressiveText}
+              onChange={value => {
+                setProgressiveText(value)
+                setProgressiveResult(null)
+              }}
+              hint={'Сотрудник\tВид налоговой базы\tНалоговая база\tИсчислено до превыш\tИсчислено с пр 15%\tИсчислено с пр 18%\tИсчислено с пр 20%\tИсчислено с пр 22%'}
+            />
+            <div className="flex justify-end mt-4">
+              <button
+                onClick={() => setProgressiveResult(checkProgressiveTax(progressiveText))}
+                disabled={!progressiveText.trim()}
+                className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                  progressiveText.trim()
+                    ? 'bg-reconciliation-accent text-[#001f18] hover:bg-reconciliation-accent-hi'
+                    : 'bg-reconciliation-border text-muted opacity-50 cursor-not-allowed'
+                }`}
+              >
+                <CheckCircle2 className="w-4 h-4" /> Проверить
+              </button>
+            </div>
+          </div>
+
+          {progressiveResult && (
+            <div className="rounded-xl border border-reconciliation-border bg-reconciliation-surface overflow-hidden">
+              <div className="px-5 py-4 border-b border-reconciliation-border flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <div className="font-semibold">Проверка прогрессивного налога</div>
+                  <div className="text-xs text-muted mt-1">
+                    Обработано строк: {progressiveResult.rowCount}; сотрудников: {progressiveResult.employees.length}
+                  </div>
+                </div>
+                {progressiveResult.employees.every(employee =>
+                  employee.bases.every(base => base.rates.every(rate => rate.difference === 0))
+                ) && progressiveResult.employees.length > 0 && (
+                  <span className="inline-flex items-center gap-2 text-sm text-success">
+                    <CheckCircle2 className="w-4 h-4" /> Налог рассчитан верно
+                  </span>
+                )}
+              </div>
+
+              {progressiveResult.warnings.map((warning, index) => (
+                <div key={index} className="px-5 py-2 text-xs text-warning border-b border-reconciliation-border">
+                  {warning}
+                </div>
+              ))}
+
+              {progressiveResult.employees.length === 0 ? (
+                <div className="px-5 py-8 text-sm text-muted">Подходящие строки не найдены.</div>
+              ) : (
+                <div className="p-5 flex flex-col gap-4">
+                  {progressiveResult.employees.map(employee => (
+                    <div key={employee.employee} className="rounded-xl border border-reconciliation-border overflow-hidden">
+                      <div className="px-4 py-3 bg-reconciliation-bg/70 font-semibold">
+                        {employee.employee}
+                      </div>
+                      <div className="p-4 flex flex-col gap-4">
+                        {employee.bases.map(base => (
+                          <div key={base.baseType}>
+                            <div className="flex flex-wrap justify-between gap-2 mb-3">
+                              <div className="text-sm font-medium">{base.baseType}</div>
+                              <div className="text-sm">
+                                <span className="text-muted">Налоговая база: </span>
+                                <span className="font-mono">{formatAmount(base.taxBase)}</span>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3">
+                              {base.rates.map(rate => (
+                                <div key={rate.rate}
+                                  className={`rounded-lg border p-3 ${
+                                    rate.difference === 0
+                                      ? 'border-reconciliation-border bg-reconciliation-bg/40'
+                                      : 'border-warning/50 bg-warning/5'
+                                  }`}>
+                                  <div className="text-xs font-semibold text-reconciliation-accent mb-2">
+                                    Ставка {rate.rate}%
+                                  </div>
+                                  <div className="text-xs text-muted">Сейчас исчислено</div>
+                                  <div className="font-mono mt-1">{formatAmount(rate.actual)}</div>
+                                  <div className="text-xs text-muted mt-3">Математически верно</div>
+                                  <div className="font-mono mt-1">{formatAmount(rate.expected)}</div>
+                                  <div className="text-xs text-muted mt-3">Разница</div>
+                                  <div className={`font-mono mt-1 ${
+                                    rate.difference === 0
+                                      ? 'text-success'
+                                      : rate.difference < 0 ? 'text-danger' : 'text-warning'
+                                  }`}>
+                                    {formatAmount(rate.difference)}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </>
       )}
     </div>
   )
