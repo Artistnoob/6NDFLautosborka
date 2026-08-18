@@ -2,7 +2,9 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
-import { Gamepad2, MessageSquare, RotateCcw, Send, Trophy, UserRound } from 'lucide-react'
+import {
+  Crown, Gamepad2, ListOrdered, MessageSquare, RotateCcw, Send, Trophy, UserRound, X,
+} from 'lucide-react'
 
 type Direction = 'left' | 'right' | 'up' | 'down'
 
@@ -13,7 +15,22 @@ interface ChatMessage {
   created_at: string
 }
 
+interface LeaderboardEntry {
+  id: number
+  nickname: string
+  score: number
+  achieved_at: string
+}
+
 const EMPTY_GRID = Array<number>(16).fill(0)
+
+function readableSupabaseError(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error)
+  if (/failed to fetch|networkerror|load failed/i.test(message)) {
+    return 'Нет связи с Supabase. Проверьте Project URL, anon key и доступность проекта.'
+  }
+  return message
+}
 
 function addTile(grid: number[]): number[] {
   const empty = grid.map((value, index) => value === 0 ? index : -1).filter(index => index >= 0)
@@ -101,6 +118,10 @@ export default function Cyberpunk2077() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [message, setMessage] = useState('')
   const [chatError, setChatError] = useState('')
+  const [connectionState, setConnectionState] = useState<'offline' | 'connecting' | 'online' | 'error'>('offline')
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
+  const [leaderboardOpen, setLeaderboardOpen] = useState(false)
+  const [scoreStatus, setScoreStatus] = useState('')
   const chatEndRef = useRef<HTMLDivElement>(null)
 
   const supabase = useMemo<SupabaseClient | null>(() => {
@@ -108,6 +129,22 @@ export default function Cyberpunk2077() {
     const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     return url && key ? createClient(url, key) : null
   }, [])
+
+  const loadLeaderboard = useCallback(async () => {
+    if (!supabase) return
+    try {
+      const { data, error } = await supabase
+        .from('cyberpunk_scores')
+        .select('*')
+        .order('score', { ascending: false })
+        .order('achieved_at', { ascending: true })
+        .limit(20)
+      if (error) throw error
+      setLeaderboard((data ?? []) as LeaderboardEntry[])
+    } catch (error) {
+      setScoreStatus(readableSupabaseError(error))
+    }
+  }, [supabase])
 
   const resetGame = useCallback(() => {
     setGrid(newGrid())
@@ -159,19 +196,29 @@ export default function Cyberpunk2077() {
   useEffect(() => {
     if (!supabase) {
       setChatError('Добавьте NEXT_PUBLIC_SUPABASE_URL и NEXT_PUBLIC_SUPABASE_ANON_KEY.')
+      setConnectionState('offline')
       return
     }
+    setConnectionState('connecting')
     let active = true
-    supabase
-      .from('cyberpunk_messages')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(100)
-      .then(({ data, error }) => {
+    void (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('cyberpunk_messages')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(100)
         if (!active) return
-        if (error) setChatError(error.message)
-        else setMessages((data as ChatMessage[]).reverse())
-      })
+        if (error) throw error
+        setMessages(((data ?? []) as ChatMessage[]).reverse())
+        setChatError('')
+      } catch (error) {
+        if (!active) return
+        setConnectionState('error')
+        setChatError(readableSupabaseError(error))
+      }
+    })()
+    void loadLeaderboard()
 
     const channel = supabase
       .channel('cyberpunk-2077-chat')
@@ -187,13 +234,22 @@ export default function Cyberpunk2077() {
           )
         },
       )
-      .subscribe()
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'cyberpunk_scores' },
+        () => void loadLeaderboard(),
+      )
+      .subscribe(status => {
+        if (!active) return
+        if (status === 'SUBSCRIBED') setConnectionState('online')
+        else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') setConnectionState('error')
+      })
 
     return () => {
       active = false
       void supabase.removeChannel(channel)
     }
-  }, [supabase])
+  }, [loadLeaderboard, supabase])
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -205,11 +261,49 @@ export default function Cyberpunk2077() {
     const cleanMessage = message.trim().slice(0, 500)
     if (!supabase || !cleanNickname || !cleanMessage) return
     setChatError('')
-    const { error } = await supabase
-      .from('cyberpunk_messages')
-      .insert({ nickname: cleanNickname, message: cleanMessage })
-    if (error) setChatError(error.message)
-    else setMessage('')
+    try {
+      const { error } = await supabase
+        .from('cyberpunk_messages')
+        .insert({ nickname: cleanNickname, message: cleanMessage })
+      if (error) throw error
+      setMessage('')
+    } catch (error) {
+      setConnectionState('error')
+      setChatError(readableSupabaseError(error))
+    }
+  }
+
+  const becomeLegend = async () => {
+    const cleanNickname = nickname.trim().slice(0, 30)
+    if (!supabase) {
+      setScoreStatus('Нет подключения к Supabase.')
+      return
+    }
+    if (!cleanNickname) {
+      setScoreStatus('Сначала введите никнейм.')
+      return
+    }
+    if (score <= 0) {
+      setScoreStatus('Сначала наберите очки.')
+      return
+    }
+    setScoreStatus('Передача результата...')
+    try {
+      const { data, error } = await supabase.rpc('submit_cyberpunk_score', {
+        player_nickname: cleanNickname,
+        player_score: score,
+      })
+      if (error) throw error
+      await loadLeaderboard()
+      setLeaderboardOpen(true)
+      setScoreStatus(
+        typeof data === 'number'
+          ? `Результат принят. Место в рейтинге: ${data}.`
+          : 'Результат принят, но пока не входит в двадцатку.',
+      )
+    } catch (error) {
+      setScoreStatus(readableSupabaseError(error))
+    }
   }
 
   const gameOver = grid.some(Boolean) && !canMove(grid)
@@ -229,9 +323,62 @@ export default function Cyberpunk2077() {
             <div className="text-xs font-black tracking-[.45em]">NIGHT CITY // SUBNET</div>
             <h1 className="text-4xl font-black italic tracking-tight">2048 <span className="text-[#d60050]">2077</span></h1>
           </div>
-          <div className="font-mono text-xs">CONNECTION: {supabase ? 'ONLINE' : 'OFFLINE'}</div>
+          <div className="font-mono text-xs">
+            CONNECTION: {{
+              offline: 'OFFLINE',
+              connecting: 'CONNECTING',
+              online: 'ONLINE',
+              error: 'ERROR',
+            }[connectionState]}
+          </div>
         </div>
       </div>
+
+      {leaderboardOpen && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm">
+          <section className="w-full max-w-xl border border-[#fcee09]/60 bg-[#07090d] shadow-[0_0_50px_rgba(252,238,9,.18)]">
+            <div className="flex items-center justify-between border-b border-[#fcee09]/35 bg-[#fcee09] px-5 py-3 text-black">
+              <div className="flex items-center gap-2 font-black italic tracking-widest">
+                <Trophy className="h-5 w-5" /> ТАБЛИЦА ЛЕГЕНД
+              </div>
+              <button onClick={() => setLeaderboardOpen(false)} aria-label="Закрыть таблицу рекордов">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="max-h-[65vh] overflow-y-auto p-4">
+              {scoreStatus && (
+                <div className="mb-3 border-l-2 border-[#00f0ff] bg-[#00f0ff]/10 px-3 py-2 text-xs text-[#00f0ff]">
+                  {scoreStatus}
+                </div>
+              )}
+              {leaderboard.length === 0 ? (
+                <div className="py-12 text-center text-sm text-[#8ba5ad]">
+                  Рейтинг пока пуст. Станьте первой легендой Найт-Сити.
+                </div>
+              ) : (
+                <ol className="space-y-2">
+                  {leaderboard.map((entry, index) => (
+                    <li key={entry.id}
+                      className={`grid grid-cols-[42px_1fr_auto] items-center gap-3 border px-3 py-2 font-mono ${
+                        index === 0
+                          ? 'border-[#fcee09]/70 bg-[#fcee09]/10'
+                          : index < 3
+                            ? 'border-[#00f0ff]/35 bg-[#00f0ff]/5'
+                            : 'border-white/10 bg-black/30'
+                      }`}>
+                      <span className={`text-lg font-black ${index === 0 ? 'text-[#fcee09]' : 'text-[#65777d]'}`}>
+                        #{index + 1}
+                      </span>
+                      <span className="truncate text-sm text-[#d5e1e5]">{entry.nickname}</span>
+                      <span className="text-lg font-black text-[#00f0ff]">{entry.score}</span>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </div>
+          </section>
+        </div>
+      )}
 
       <div className="relative grid grid-cols-1 xl:grid-cols-[240px_minmax(420px,1fr)_340px] gap-5 p-5">
         <aside className="space-y-4">
@@ -265,6 +412,27 @@ export default function Cyberpunk2077() {
             <div className="font-bold text-white mb-2">УПРАВЛЕНИЕ</div>
             Стрелки или WASD. Соединяйте одинаковые нейрочипы и доберитесь до 2048.
           </section>
+
+          <div className="grid grid-cols-1 gap-2">
+            <button
+              onClick={() => void becomeLegend()}
+              className="inline-flex items-center justify-center gap-2 border border-[#fcee09]/55 bg-[#fcee09]/10 px-3 py-2.5 text-xs font-black text-[#fcee09] hover:bg-[#fcee09] hover:text-black"
+            >
+              <Crown className="h-4 w-4" /> СТАТЬ ЛЕГЕНДОЙ
+            </button>
+            <button
+              onClick={() => {
+                setLeaderboardOpen(true)
+                void loadLeaderboard()
+              }}
+              className="inline-flex items-center justify-center gap-2 border border-[#00f0ff]/45 bg-[#00f0ff]/10 px-3 py-2.5 text-xs font-bold text-[#00f0ff] hover:bg-[#00f0ff] hover:text-black"
+            >
+              <ListOrdered className="h-4 w-4" /> ТАБЛИЦА РЕКОРДОВ
+            </button>
+            {scoreStatus && !leaderboardOpen && (
+              <div className="text-[10px] leading-relaxed text-[#ff5b91]">{scoreStatus}</div>
+            )}
+          </div>
         </aside>
 
         <main className="flex flex-col items-center">
