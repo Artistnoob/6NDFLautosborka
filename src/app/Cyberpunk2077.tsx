@@ -128,17 +128,17 @@ function RankIcon({ rank }: { rank: number }) {
     1: {
       image: cyberdemonRank,
       title: 'Горящий кибердемон',
-      glow: 'animate-pulse [filter:drop-shadow(0_0_5px_#ff174d)_drop-shadow(0_0_12px_#d50036)]',
+      glow: 'text-[#ff174d] animate-pulse [filter:drop-shadow(0_0_5px_#ff174d)_drop-shadow(0_0_12px_#d50036)]',
     },
     2: {
       image: arasakaRank,
       title: 'Арасака',
-      glow: '[filter:drop-shadow(0_0_4px_#ff2a3d)_drop-shadow(0_0_8px_#8f0018)]',
+      glow: 'text-[#ff2a3d] [filter:drop-shadow(0_0_4px_#ff2a3d)_drop-shadow(0_0_8px_#8f0018)]',
     },
     3: {
       image: yellowRuneRank,
       title: 'Золотая киберруна',
-      glow: 'opacity-90 [filter:drop-shadow(0_0_3px_#fcee09)_drop-shadow(0_0_7px_#9b7500)]',
+      glow: 'text-[#fcee09] opacity-90 [filter:drop-shadow(0_0_3px_#fcee09)_drop-shadow(0_0_7px_#9b7500)]',
     },
   }
   const icon = icons[rank]
@@ -146,14 +146,23 @@ function RankIcon({ rank }: { rank: number }) {
   return (
     <span
       title={icon.title}
-      className={`relative flex h-10 w-10 shrink-0 items-center justify-center ${icon.glow}`}
+      className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${icon.glow}`}
     >
+      <Image
+        src={icon.image}
+        alt=""
+        width={40}
+        height={40}
+        aria-hidden="true"
+        className="absolute h-10 w-10 scale-125 rounded-full object-cover opacity-75 blur-[6px] mix-blend-screen"
+      />
+      <span className="absolute inset-0 rounded-full border border-white/25 shadow-[inset_0_0_7px_rgba(255,255,255,.2),0_0_8px_currentColor]" />
       <Image
         src={icon.image}
         alt={icon.title}
         width={40}
         height={40}
-        className="h-10 w-10 rounded-full object-cover"
+        className="relative h-10 w-10 rounded-full object-cover brightness-110 contrast-125"
       />
     </span>
   )
@@ -367,14 +376,14 @@ export default function Cyberpunk2077() {
         }}
       />
       <div className="cyber-code-field pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-        {HACK_SYMBOLS.map((symbol, index) => (
+        {Array.from({ length: 48 }, (_, index) => HACK_SYMBOLS[index % HACK_SYMBOLS.length]).map((symbol, index) => (
           <span
             key={`${symbol}-${index}`}
             className="cyber-code-symbol"
             style={{
               left: `${3 + ((index * 37) % 94)}%`,
-              animationDelay: `${-((index * 1.7) % 18)}s`,
-              animationDuration: `${13 + (index % 8)}s`,
+              animationDelay: `${-((index * 1.15) % 14)}s`,
+              animationDuration: `${8 + (index % 7)}s`,
               fontSize: `${9 + (index % 4) * 2}px`,
             }}
           >
