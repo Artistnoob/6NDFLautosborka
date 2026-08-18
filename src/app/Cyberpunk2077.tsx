@@ -110,6 +110,53 @@ function tileStyle(value: number): string {
   return 'bg-[#fcee09] border-white text-black shadow-[0_0_24px_rgba(252,238,9,.45)]'
 }
 
+function RankIcon({ rank }: { rank: number }) {
+  if (rank === 1) {
+    return (
+      <span
+        title="Горящий кибердемон"
+        className="flex h-8 w-8 items-center justify-center text-[#ff174d] [filter:drop-shadow(0_0_4px_#ff174d)_drop-shadow(0_0_10px_#d50036)] animate-pulse"
+      >
+        <svg viewBox="0 0 32 32" className="h-8 w-8" aria-hidden="true">
+          <path fill="currentColor" d="M7 4l6 5-2 3h10l-2-3 6-5-1 9 4 4-4 11H8L4 17l4-4L7 4z" />
+          <path fill="#07090d" d="M9 16l5 2-4 3-1-5zm14 0l-5 2 4 3 1-5zm-11 8h8l-4 3-4-3z" />
+          <path fill="#fcee09" d="M15 10h2l-1-7-1 7z" />
+        </svg>
+      </span>
+    )
+  }
+  if (rank === 2) {
+    return (
+      <span
+        title="Неоновый пистолет"
+        className="flex h-8 w-8 items-center justify-center text-[#ff5b91] [filter:drop-shadow(0_0_4px_#ff2a6d)]"
+      >
+        <svg viewBox="0 0 32 32" className="h-7 w-7" aria-hidden="true">
+          <path fill="currentColor" d="M3 9h22l4 4-4 4h-8l-2 4 3 7h-7l-4-11H3V9z" />
+          <path fill="#07090d" d="M7 12h15v2H7v-2zm3 5h4l-2 4-2-4z" />
+          <path fill="#fcee09" d="M25 11h3v4h-3z" />
+        </svg>
+      </span>
+    )
+  }
+  if (rank === 3) {
+    return (
+      <span
+        title="Игральная нейрофишка"
+        className="flex h-8 w-8 items-center justify-center text-[#00b8c4] opacity-80 [filter:drop-shadow(0_0_3px_#00f0ff)]"
+      >
+        <svg viewBox="0 0 32 32" className="h-7 w-7" aria-hidden="true">
+          <circle cx="16" cy="16" r="13" fill="currentColor" />
+          <circle cx="16" cy="16" r="8" fill="#07151a" stroke="#67f8ff" strokeWidth="1.5" />
+          <path fill="currentColor" d="M14 10h4v3h-4zm0 9h4v3h-4zm-4-5h3v4h-3zm9 0h3v4h-3z" />
+          <path fill="#fcee09" d="M15 14h2v4h-2z" />
+        </svg>
+      </span>
+    )
+  }
+  return <span className="h-8 w-8" aria-hidden="true" />
+}
+
 export default function Cyberpunk2077() {
   const [grid, setGrid] = useState<number[]>(EMPTY_GRID)
   const [score, setScore] = useState(0)
@@ -359,7 +406,7 @@ export default function Cyberpunk2077() {
                 <ol className="space-y-2">
                   {leaderboard.map((entry, index) => (
                     <li key={entry.id}
-                      className={`grid grid-cols-[42px_1fr_auto] items-center gap-3 border px-3 py-2 font-mono ${
+                      className={`grid grid-cols-[42px_32px_1fr_auto] items-center gap-2 border px-3 py-2 font-mono ${
                         index === 0
                           ? 'border-[#fcee09]/70 bg-[#fcee09]/10'
                           : index < 3
@@ -369,6 +416,7 @@ export default function Cyberpunk2077() {
                       <span className={`text-lg font-black ${index === 0 ? 'text-[#fcee09]' : 'text-[#65777d]'}`}>
                         #{index + 1}
                       </span>
+                      <RankIcon rank={index + 1} />
                       <span className="truncate text-sm text-[#d5e1e5]">{entry.nickname}</span>
                       <span className="text-lg font-black text-[#00f0ff]">{entry.score}</span>
                     </li>
