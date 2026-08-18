@@ -26,6 +26,10 @@ body.theme-reconciliation {
   background-color: #010806;
 }
 
+body.theme-cyberpunk {
+  background-color: #020306;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }

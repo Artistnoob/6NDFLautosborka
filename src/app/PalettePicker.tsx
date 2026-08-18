@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Palette, X } from 'lucide-react'
 
-export type PaletteSection = 'reconciliation' | 'quarterly' | 'annual'
+export type PaletteSection = 'reconciliation' | 'quarterly' | 'annual' | 'cyberpunk'
 export interface SectionPalette {
   color: string
   brightness: number
@@ -15,12 +15,14 @@ const SECTION_LABELS: Record<PaletteSection, string> = {
   reconciliation: 'Сверка НДФЛ',
   quarterly: 'Квартальная отчётность',
   annual: 'Годовая отчётность',
+  cyberpunk: '2077',
 }
 
 export const DEFAULT_SECTION_PALETTES: SectionPalettes = {
   reconciliation: { color: '#009b79', brightness: 100, saturation: 100 },
   quarterly: { color: '#5c7cfa', brightness: 100, saturation: 100 },
   annual: { color: '#c44d5a', brightness: 100, saturation: 100 },
+  cyberpunk: { color: '#fcee09', brightness: 100, saturation: 100 },
 }
 
 function hexHue(hex: string): number {

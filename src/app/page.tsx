@@ -7,6 +7,7 @@ import {
   Info, ChevronRight, Loader2, History, Calendar, CalendarRange, Scale
 } from 'lucide-react'
 import NdflReconciliation from '@/app/NdflReconciliation'
+import Cyberpunk2077 from '@/app/Cyberpunk2077'
 import PalettePicker, {
   DEFAULT_SECTION_PALETTES,
   sectionFilter,
@@ -20,7 +21,7 @@ import {
   type MatchField,
 } from '@/lib/matching'
 
-type ReportMode = 'reconciliation' | 'quarterly' | 'annual'
+type ReportMode = 'reconciliation' | 'quarterly' | 'annual' | 'cyberpunk'
 type FileBucket = 'notifs' | 'reports' | 'prevReports'
 
 interface UploadedFile {
@@ -275,15 +276,56 @@ export default function Home() {
   const logEndRef = useRef<HTMLDivElement>(null)
   const isAnnual = mode === 'annual'
   const isReconciliation = mode === 'reconciliation'
+  const isCyberpunk = mode === 'cyberpunk'
 
   useEffect(() => {
     document.body.classList.toggle('theme-annual', isAnnual)
     document.body.classList.toggle('theme-reconciliation', isReconciliation)
+    document.body.classList.toggle('theme-cyberpunk', isCyberpunk)
     return () => {
       document.body.classList.remove('theme-annual')
       document.body.classList.remove('theme-reconciliation')
+      document.body.classList.remove('theme-cyberpunk')
     }
-  }, [isAnnual, isReconciliation])
+  }, [isAnnual, isReconciliation, isCyberpunk])
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('ndfl-section-colors')
+      if (saved) {
+        const parsed = JSON.parse(saved) as Record<string, string | Partial<SectionPalette>>
+        const migrated = { ...DEFAULT_SECTION_PALETTES }
+        for (const section of Object.keys(DEFAULT_SECTION_PALETTES) as PaletteSection[]) {
+          const value = parsed[section]
+          migrated[section] = typeof value === 'string'
+            ? { ...DEFAULT_SECTION_PALETTES[section], color: value }
+            : { ...DEFAULT_SECTION_PALETTES[section], ...(value ?? {}) }
+        }
+        setSectionPalettes(migrated)
+      }
+    } catch {
+      setSectionPalettes(DEFAULT_SECTION_PALETTES)
+    }
+  }, [])
+
+  const changeSectionPalette = (section: PaletteSection, values: Partial<SectionPalette>) => {
+    setSectionPalettes(prev => {
+      const next = {
+        ...prev,
+        [section]: { ...prev[section], ...values },
+      }
+      localStorage.setItem('ndfl-section-colors', JSON.stringify(next))
+      return next
+    })
+  }
+
+  const resetSectionPalette = (section: PaletteSection) => {
+    setSectionPalettes(prev => {
+      const next = { ...prev, [section]: { ...DEFAULT_SECTION_PALETTES[section] } }
+      localStorage.setItem('ndfl-section-colors', JSON.stringify(next))
+      return next
+    })
+  }
 
   useEffect(() => {
     try {
@@ -701,8 +743,24 @@ export default function Home() {
       onChange={changeSectionPalette}
       onReset={resetSectionPalette}
     />
+    <button
+      onClick={() => setMode('cyberpunk')}
+      className={`fixed top-3 right-3 z-[70] px-3 py-1.5 font-mono text-xs font-black italic tracking-[.25em] transition-all ${
+        isCyberpunk
+          ? 'bg-[#fcee09] text-black shadow-[0_0_20px_rgba(252,238,9,.45)]'
+          : 'border border-[#fcee09]/60 bg-black/90 text-[#fcee09] hover:bg-[#fcee09] hover:text-black'
+      } [clip-path:polygon(8px_0,100%_0,100%_calc(100%-8px),calc(100%-8px)_100%,0_100%,0_8px)]`}
+    >
+      2077
+    </button>
     <div className={`min-h-screen transition-colors duration-500 ${
-      isAnnual ? 'bg-annual-bg' : isReconciliation ? 'bg-reconciliation-bg' : 'bg-bg'
+      isAnnual
+        ? 'bg-annual-bg'
+        : isReconciliation
+          ? 'bg-reconciliation-bg'
+          : isCyberpunk
+            ? 'bg-[#020306]'
+            : 'bg-bg'
     }`} style={{
       filter: sectionFilter(mode, sectionPalettes[mode]),
     }}>
@@ -801,7 +859,7 @@ export default function Home() {
         </div>
       )}
 
-      {!isReconciliation && (
+      {(mode === 'quarterly' || mode === 'annual') && (
         isAnnual
           ? <ExcludePanel annual excluded={annualExcluded} onToggle={f => toggleExclude(f, true)} />
           : <ExcludePanel excluded={excluded} onToggle={f => toggleExclude(f, false)} />
@@ -812,16 +870,20 @@ export default function Home() {
           ? 'border-annual-border bg-annual-surface'
           : isReconciliation
             ? 'border-reconciliation-border bg-reconciliation-surface'
-            : 'border-border bg-surface'
+            : isCyberpunk
+              ? 'border-[#fcee09]/25 bg-[#07090d]'
+              : 'border-border bg-surface'
       }`}>
-        <div className={`${isReconciliation ? 'max-w-7xl' : 'max-w-3xl'} mx-auto px-6 py-4 flex flex-col gap-4`}>
+        <div className={`${isReconciliation || isCyberpunk ? 'max-w-7xl' : 'max-w-3xl'} mx-auto px-6 py-4 flex flex-col gap-4`}>
           <div className="flex items-center gap-3">
             <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-mono text-sm font-medium flex-shrink-0 ${
               isAnnual
                 ? 'bg-annual-accent text-white'
                 : isReconciliation
                   ? 'bg-reconciliation-accent text-[#102713]'
-                  : 'bg-accent text-white'
+                  : isCyberpunk
+                    ? 'bg-[#fcee09] text-black'
+                    : 'bg-accent text-white'
             }`}>НД</div>
             <div className="flex-1">
               <div className="font-semibold text-[15px] leading-none">6-НДФЛ Updater</div>
@@ -832,7 +894,7 @@ export default function Home() {
         </div>
       </header>
 
-      <main className={`${isReconciliation ? 'max-w-7xl' : 'max-w-3xl lg:pl-60'} mx-auto px-6 py-12 transition-colors duration-500`}>
+      <main className={`${isReconciliation || isCyberpunk ? 'max-w-7xl' : 'max-w-3xl lg:pl-60'} mx-auto px-6 py-12 transition-colors duration-500`}>
         {!isAnnual && !isReconciliation && (
           <div className="lg:hidden mb-6 bg-surface border border-border rounded-xl p-4">
             <div className="text-xs font-semibold text-[#e8e9f0] mb-3">Исключить для заполнения</div>
@@ -849,6 +911,8 @@ export default function Home() {
         )}
         {isReconciliation
           ? <NdflReconciliation />
+          : isCyberpunk
+            ? <Cyberpunk2077 />
           : isAnnual
             ? renderWorkflow(true)
             : renderWorkflow(false)}
