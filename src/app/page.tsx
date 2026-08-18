@@ -327,44 +327,6 @@ export default function Home() {
     })
   }
 
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('ndfl-section-colors')
-      if (saved) {
-        const parsed = JSON.parse(saved) as Record<string, string | Partial<SectionPalette>>
-        const migrated = { ...DEFAULT_SECTION_PALETTES }
-        for (const section of Object.keys(DEFAULT_SECTION_PALETTES) as PaletteSection[]) {
-          const value = parsed[section]
-          migrated[section] = typeof value === 'string'
-            ? { ...DEFAULT_SECTION_PALETTES[section], color: value }
-            : { ...DEFAULT_SECTION_PALETTES[section], ...(value ?? {}) }
-        }
-        setSectionPalettes(migrated)
-      }
-    } catch {
-      setSectionPalettes(DEFAULT_SECTION_PALETTES)
-    }
-  }, [])
-
-  const changeSectionPalette = (section: PaletteSection, values: Partial<SectionPalette>) => {
-    setSectionPalettes(prev => {
-      const next = {
-        ...prev,
-        [section]: { ...prev[section], ...values },
-      }
-      localStorage.setItem('ndfl-section-colors', JSON.stringify(next))
-      return next
-    })
-  }
-
-  const resetSectionPalette = (section: PaletteSection) => {
-    setSectionPalettes(prev => {
-      const next = { ...prev, [section]: { ...DEFAULT_SECTION_PALETTES[section] } }
-      localStorage.setItem('ndfl-section-colors', JSON.stringify(next))
-      return next
-    })
-  }
-
   const addLog = useCallback((text: string, type: LogEntry['type'] = 'info', annual = false) => {
     const setter = annual ? setAnnualLogs : setLogs
     setter(prev => {
