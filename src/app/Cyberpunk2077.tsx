@@ -1,6 +1,8 @@
 'use client'
 
-import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  FormEvent, type TouchEvent, useCallback, useEffect, useMemo, useRef, useState,
+} from 'react'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import Image, { type StaticImageData } from 'next/image'
 import {
@@ -180,6 +182,7 @@ export default function Cyberpunk2077() {
   const [leaderboardOpen, setLeaderboardOpen] = useState(false)
   const [scoreStatus, setScoreStatus] = useState('')
   const chatEndRef = useRef<HTMLDivElement>(null)
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null)
 
   const supabase = useMemo<SupabaseClient | null>(() => {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -230,6 +233,30 @@ export default function Cyberpunk2077() {
       return addTile(result.grid)
     })
   }, [])
+
+  const startBoardSwipe = (event: TouchEvent<HTMLDivElement>) => {
+    const touch = event.touches[0]
+    if (!touch) return
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY }
+  }
+
+  const finishBoardSwipe = (event: TouchEvent<HTMLDivElement>) => {
+    const start = touchStartRef.current
+    const touch = event.changedTouches[0]
+    touchStartRef.current = null
+    if (!start || !touch) return
+
+    const deltaX = touch.clientX - start.x
+    const deltaY = touch.clientY - start.y
+    const distance = Math.max(Math.abs(deltaX), Math.abs(deltaY))
+    if (distance < 32) return
+
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+      move(deltaX > 0 ? 'right' : 'left')
+    } else {
+      move(deltaY > 0 ? 'down' : 'up')
+    }
+  }
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -490,7 +517,8 @@ export default function Cyberpunk2077() {
 
           <section className="border border-white/10 bg-black/40 p-4 text-xs text-[#8ba5ad]">
             <div className="font-bold text-white mb-2">УПРАВЛЕНИЕ</div>
-            Стрелки или WASD. Соединяйте одинаковые нейрочипы и доберитесь до 2048.
+            Стрелки или WASD. На телефоне управляйте свайпами по игровому полю.
+            Соединяйте одинаковые нейрочипы и доберитесь до 2048.
           </section>
 
           <div className="grid grid-cols-1 gap-2">
@@ -527,7 +555,12 @@ export default function Cyberpunk2077() {
             </button>
           </div>
 
-          <div className="relative grid aspect-square w-full max-w-[560px] grid-cols-4 gap-3 border-2 border-[#00f0ff]/35 bg-[#03070a]/95 p-3 shadow-[inset_0_0_40px_rgba(0,240,255,.08)]">
+          <div
+            className="relative grid aspect-square w-full max-w-[560px] touch-none select-none grid-cols-4 gap-3 border-2 border-[#00f0ff]/35 bg-[#03070a]/95 p-3 shadow-[inset_0_0_40px_rgba(0,240,255,.08)]"
+            onTouchStart={startBoardSwipe}
+            onTouchEnd={finishBoardSwipe}
+            onTouchCancel={() => { touchStartRef.current = null }}
+          >
             {grid.map((value, index) => (
               <div key={index}
                 className={`flex items-center justify-center border text-2xl sm:text-3xl font-black font-mono transition-all duration-100 ${tileStyle(value)}`}>
