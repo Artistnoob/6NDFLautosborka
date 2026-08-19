@@ -29,6 +29,10 @@ interface LeaderboardEntry {
 }
 
 const EMPTY_GRID = Array<number>(16).fill(0)
+const STANDARD_TARGET = 2048
+// В классической механике плитки являются степенями двойки, поэтому ближайшая
+// достижимая цель к 2 048 000 — 2 097 152 (2048 × 1024).
+const ENDLESS_TARGET = 2_097_152
 const HACK_SYMBOLS = [
   'BD 55 E9', 'RAM', '0xFF', 'ICE', '01 10', 'ROOT', 'E9', 'BREACH',
   '55 BD', 'SYS', '0101', 'DAEMON', 'FF 1C', 'NET', '7A', 'ACCESS',
@@ -121,6 +125,13 @@ function tileStyle(value: number): string {
   return 'bg-[#fcee09] border-white text-black shadow-[0_0_24px_rgba(252,238,9,.45)]'
 }
 
+function tileTextSize(value: number): string {
+  if (value >= 1_000_000) return 'text-[10px] sm:text-sm'
+  if (value >= 100_000) return 'text-xs sm:text-base'
+  if (value >= 10_000) return 'text-sm sm:text-xl'
+  return 'text-2xl sm:text-3xl'
+}
+
 function RankIcon({ rank }: { rank: number }) {
   const icons: Record<number, {
     image: StaticImageData
@@ -182,6 +193,8 @@ export default function Cyberpunk2077() {
   const [leaderboardOpen, setLeaderboardOpen] = useState(false)
   const [scoreStatus, setScoreStatus] = useState('')
   const [moveAnimation, setMoveAnimation] = useState<{ direction: Direction; sequence: number } | null>(null)
+  const [endlessMode, setEndlessMode] = useState(false)
+  const [endlessMilestoneDismissed, setEndlessMilestoneDismissed] = useState(false)
   const chatEndRef = useRef<HTMLDivElement>(null)
   const touchStartRef = useRef<{ x: number; y: number } | null>(null)
 
@@ -210,6 +223,9 @@ export default function Cyberpunk2077() {
   const resetGame = useCallback(() => {
     setGrid(newGrid())
     setScore(0)
+    setEndlessMode(false)
+    setEndlessMilestoneDismissed(false)
+    setMoveAnimation(null)
   }, [])
 
   useEffect(() => {
@@ -396,7 +412,11 @@ export default function Cyberpunk2077() {
   }
 
   const gameOver = grid.some(Boolean) && !canMove(grid)
-  const won = grid.some(value => value >= 2048)
+  const standardWon = !endlessMode && grid.some(value => value >= STANDARD_TARGET)
+  const endlessMilestoneReached =
+    endlessMode &&
+    !endlessMilestoneDismissed &&
+    grid.some(value => value >= ENDLESS_TARGET)
 
   return (
     <div className="relative min-h-[calc(100vh-190px)] overflow-hidden rounded-2xl border border-[#fcee09]/35 bg-[#07090d] text-[#e8edf2] shadow-[0_0_60px_rgba(252,238,9,.08)]">
@@ -554,6 +574,9 @@ export default function Cyberpunk2077() {
             <div className="flex items-center gap-2 text-[#fcee09]">
               <Gamepad2 className="w-5 h-5" />
               <span className="font-bold tracking-widest">BREACH PROTOCOL</span>
+              <span className="border-l border-[#fcee09]/35 pl-2 font-mono text-[10px] text-[#8ba5ad]">
+                ЦЕЛЬ: {(endlessMode ? ENDLESS_TARGET : STANDARD_TARGET).toLocaleString('ru-RU')}
+              </span>
             </div>
             <button onClick={resetGame}
               className="inline-flex items-center gap-2 border border-[#fcee09]/50 bg-[#fcee09]/10 px-3 py-2 text-xs font-bold text-[#fcee09] hover:bg-[#fcee09] hover:text-black">
@@ -570,17 +593,48 @@ export default function Cyberpunk2077() {
             {grid.map((value, index) => (
               <div
                 key={`${index}-${moveAnimation?.sequence ?? 0}`}
-                className={`flex items-center justify-center border text-2xl sm:text-3xl font-black font-mono transition-all duration-100 ${
+                className={`flex items-center justify-center border font-black font-mono transition-all duration-100 ${
                   moveAnimation ? `cyber-tile-move-${moveAnimation.direction}` : ''
-                } ${tileStyle(value)}`}
+                } ${tileTextSize(value)} ${tileStyle(value)}`}
               >
                 {value || 0}
               </div>
             ))}
-            {(gameOver || won) && (
+            {(gameOver || standardWon || endlessMilestoneReached) && (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/85 backdrop-blur-sm">
-                <div className="text-3xl font-black text-[#fcee09]">{won ? 'RELIC ACTIVATED' : 'SYSTEM FAILURE'}</div>
-                <button onClick={resetGame} className="mt-4 bg-[#fcee09] px-5 py-2 font-bold text-black">ПЕРЕЗАПУСК</button>
+                <div className="px-4 text-center text-3xl font-black text-[#fcee09]">
+                  {endlessMilestoneReached
+                    ? 'NIGHT CITY LEGEND'
+                    : standardWon
+                      ? 'RELIC ACTIVATED'
+                      : 'SYSTEM FAILURE'}
+                </div>
+                {endlessMilestoneReached && (
+                  <div className="mt-2 font-mono text-xs text-[#00f0ff]">
+                    ПЛИТКА {ENDLESS_TARGET.toLocaleString('ru-RU')} СОБРАНА
+                  </div>
+                )}
+                <div className="mt-4 flex flex-wrap justify-center gap-3">
+                  <button onClick={resetGame} className="bg-[#fcee09] px-5 py-2 font-bold text-black">
+                    ПЕРЕЗАПУСК
+                  </button>
+                  {standardWon && (
+                    <button
+                      onClick={() => setEndlessMode(true)}
+                      className="border border-[#00f0ff] bg-[#00f0ff]/15 px-5 py-2 font-bold text-[#00f0ff] hover:bg-[#00f0ff] hover:text-black"
+                    >
+                      БЕСКОНЕЧНЫЙ РЕЖИМ
+                    </button>
+                  )}
+                  {endlessMilestoneReached && (
+                    <button
+                      onClick={() => setEndlessMilestoneDismissed(true)}
+                      className="border border-[#ff2a6d] bg-[#ff2a6d]/15 px-5 py-2 font-bold text-[#ff5b91] hover:bg-[#ff2a6d] hover:text-black"
+                    >
+                      ПРОДОЛЖИТЬ
+                    </button>
+                  )}
+                </div>
               </div>
             )}
           </div>
