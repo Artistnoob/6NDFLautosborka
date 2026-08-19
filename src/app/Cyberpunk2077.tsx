@@ -58,6 +58,35 @@ function addTile(grid: number[]): number[] {
   return next
 }
 
+function addCheatTile(grid: number[], direction: 'left' | 'right'): number[] {
+  const candidates: { index: number; value: number }[] = []
+
+  for (let row = 0; row < 4; row++) {
+    const values = [0, 1, 2, 3].map(column => grid[row * 4 + column])
+    if (direction === 'left') {
+      let last = -1
+      for (let column = 0; column < 4; column++) {
+        if (values[column]) last = column
+      }
+      if (last >= 0 && last < 3 && values[last + 1] === 0) {
+        candidates.push({ index: row * 4 + last + 1, value: values[last] })
+      }
+    } else {
+      const first = values.findIndex(Boolean)
+      if (first > 0) {
+        candidates.push({ index: row * 4 + first - 1, value: values[first] })
+      }
+    }
+  }
+
+  if (candidates.length === 0) return addTile(grid)
+
+  candidates.sort((left, right) => right.value - left.value)
+  const next = [...grid]
+  next[candidates[0].index] = candidates[0].value
+  return next
+}
+
 function newGrid(): number[] {
   return addTile(addTile([...EMPTY_GRID]))
 }
@@ -205,6 +234,8 @@ export default function Cyberpunk2077({
   const [endlessMilestoneDismissed, setEndlessMilestoneDismissed] = useState(false)
   const chatEndRef = useRef<HTMLDivElement>(null)
   const touchStartRef = useRef<{ x: number; y: number } | null>(null)
+  const cheatClicksRef = useRef<number[]>([])
+  const cheatActiveRef = useRef(false)
 
   const supabase = useMemo<SupabaseClient | null>(() => {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -248,6 +279,15 @@ export default function Cyberpunk2077({
     setMoveAnimation(null)
   }, [])
 
+  const resetGameFromButton = useCallback(() => {
+    const now = Date.now()
+    const recent = cheatClicksRef.current.filter(time => now - time < 800)
+    recent.push(now)
+    cheatClicksRef.current = recent
+    cheatActiveRef.current = recent.length >= 4
+    resetGame()
+  }, [resetGame])
+
   useEffect(() => {
     resetGame()
     setBest(Number(localStorage.getItem('cyber-2048-best') ?? 0))
@@ -255,6 +295,10 @@ export default function Cyberpunk2077({
   }, [resetGame])
 
   const move = useCallback((direction: Direction) => {
+    if (direction === 'up' || direction === 'down') {
+      cheatActiveRef.current = false
+      cheatClicksRef.current = []
+    }
     setGrid(current => {
       const result = moveGrid(current, direction)
       if (!result.moved) return current
@@ -271,7 +315,8 @@ export default function Cyberpunk2077({
         })
         return nextScore
       })
-      return addTile(result.grid)
+      const useCheat = cheatActiveRef.current && (direction === 'left' || direction === 'right')
+      return useCheat ? addCheatTile(result.grid, direction) : addTile(result.grid)
     })
   }, [])
 
@@ -615,7 +660,7 @@ export default function Cyberpunk2077({
                 ЦЕЛЬ: {(endlessMode ? ENDLESS_TARGET : STANDARD_TARGET).toLocaleString('ru-RU')}
               </span>
             </div>
-            <button onClick={resetGame}
+            <button onClick={resetGameFromButton}
               className="cyber-btn-accent inline-flex items-center gap-2 border px-3 py-2 text-xs font-bold">
               <RotateCcw className="w-4 h-4" /> НОВАЯ ИГРА
             </button>
@@ -652,7 +697,7 @@ export default function Cyberpunk2077({
                   </div>
                 )}
                 <div className="mt-4 flex flex-wrap justify-center gap-3">
-                  <button onClick={resetGame} className="cyber-banner px-5 py-2 font-bold">
+                  <button onClick={resetGameFromButton} className="cyber-banner px-5 py-2 font-bold">
                     ПЕРЕЗАПУСК
                   </button>
                   {standardWon && (
