@@ -411,8 +411,8 @@ body.theme-cyberpunk {
 
 .cyber-preset-silverhand .cyber-first-place-name {
   animation: none;
-  color: #fcee09;
-  text-shadow: 0 0 6px rgba(252, 238, 9, 0.55);
+  color: #163a7a;
+  text-shadow: 0 0 6px rgba(22, 58, 122, 0.45);
 }
 
 .cyber-preset-silverhand,
@@ -420,16 +420,16 @@ body.theme-cyberpunk {
   --cyber-bg: #05080b;
   --cyber-panel: #11130d;
   --cyber-banner: #fcee09;
-  --cyber-banner-text: #05080b;
-  --cyber-banner-mark: #05080b;
-  --cyber-accent: #fcee09;
+  --cyber-banner-text: #163a7a;
+  --cyber-banner-mark: #163a7a;
+  --cyber-accent: #163a7a;
   --cyber-line: #fcee09;
-  --cyber-hot: #fcee09;
-  --cyber-text: #fcee09;
-  --cyber-muted: #d8c84a;
-  --cyber-number: #fcee09;
-  --cyber-chat-name: #fcee09;
-  --cyber-chat-text: #fcee09;
+  --cyber-hot: #163a7a;
+  --cyber-text: #163a7a;
+  --cyber-muted: #2c5a94;
+  --cyber-number: #163a7a;
+  --cyber-chat-name: #163a7a;
+  --cyber-chat-text: #163a7a;
   --cyber-chat-bg: #0a0c08;
 }
 
@@ -439,19 +439,18 @@ body.theme-cyberpunk {
 .cyber-preset-silverhand .cyber-tile-256 {
   background: #14160e;
   border-color: rgba(252, 238, 9, 0.45);
-  color: #fcee09;
+  color: #163a7a;
 }
 
 .cyber-preset-silverhand .cyber-tile-high {
   background: #fcee09;
   border-color: #fff56a;
-  color: #05080b;
+  color: #163a7a;
 }
 
-.cyber-preset-silverhand .cyber-code-symbol,
-.cyber-preset-silverhand .cyber-rare-word {
-  color: #fcee09 !important;
-  text-shadow: 0 0 6px rgba(252, 238, 9, 0.68) !important;
+.cyber-preset-silverhand .cyber-send {
+  background: #163a7a;
+  color: #fcee09;
 }
 
 .cyber-shell.cyber-preset-arasaka {
@@ -475,12 +474,12 @@ body.theme-cyberpunk {
 .cyber-shell.cyber-preset-silverhand .cyber-app-header {
   background: #07090d;
   border-color: rgba(252, 238, 9, 0.3);
-  color: #fcee09;
+  color: #163a7a;
 }
 
 .cyber-shell.cyber-preset-silverhand .cyber-app-logo {
   background: #fcee09;
-  color: #05080b;
+  color: #163a7a;
 }
 
 .cyber-mode-button-arasaka,
@@ -504,12 +503,12 @@ body.theme-cyberpunk {
 .cyber-mode-button-silverhand,
 .cyber-mode-button-silverhand:hover {
   background: #fcee09 !important;
-  color: #05080b !important;
+  color: #163a7a !important;
   border-color: #fff56a !important;
 }
 
 .cyber-preset-menu-silverhand,
 .cyber-preset-menu-silverhand button {
-  color: #fcee09 !important;
+  color: #163a7a !important;
   border-color: rgba(252, 238, 9, 0.5) !important;
 }
