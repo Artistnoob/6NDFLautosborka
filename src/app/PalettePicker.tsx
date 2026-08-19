@@ -42,10 +42,26 @@ function hexHue(hex: string): number {
   return (hue * 60 + 360) % 360
 }
 
+function hexTone(hex: string): { chroma: number; lightness: number } {
+  const value = hex.replace('#', '')
+  const channels = [0, 2, 4].map(offset => parseInt(value.slice(offset, offset + 2), 16) / 255)
+  const max = Math.max(...channels)
+  const min = Math.min(...channels)
+  return {
+    chroma: max - min,
+    lightness: (max + min) / 2,
+  }
+}
+
 export function sectionFilter(
   section: PaletteSection,
   palette: SectionPalette,
 ): string {
+  const tone = hexTone(palette.color)
+  if (tone.chroma < 0.02) {
+    const toneBrightness = 0.7 + tone.lightness * 0.45
+    return `grayscale(1) saturate(0%) brightness(${Math.round(palette.brightness * toneBrightness)}%)`
+  }
   const baseHue = hexHue(DEFAULT_SECTION_PALETTES[section].color)
   const selectedHue = hexHue(palette.color)
   let difference = selectedHue - baseHue
@@ -106,10 +122,27 @@ export default function PalettePicker({
             <input
               type="color"
               value={palettes[selected].color}
-              onChange={event => onChange(selected, { color: event.target.value })}
+              onChange={event => onChange(selected, {
+                color: event.target.value,
+                saturation: palettes[selected].saturation === 0 ? 100 : palettes[selected].saturation,
+              })}
               className="w-12 h-8 rounded cursor-pointer bg-transparent"
             />
           </label>
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <button
+              onClick={() => onChange(selected, { color: '#ffffff', saturation: 0, brightness: 105 })}
+              className="rounded-lg border border-white/40 bg-white px-3 py-2 text-xs font-medium text-black hover:bg-white/85"
+            >
+              Белый
+            </button>
+            <button
+              onClick={() => onChange(selected, { color: '#000000', saturation: 0, brightness: 75 })}
+              className="rounded-lg border border-white/25 bg-black px-3 py-2 text-xs font-medium text-white hover:border-white/50"
+            >
+              Чёрный
+            </button>
+          </div>
           <label className="block rounded-lg bg-bg px-3 py-3 mt-2">
             <span className="flex justify-between text-xs text-muted mb-2">
               <span>Яркость</span>
@@ -131,7 +164,7 @@ export default function PalettePicker({
             </span>
             <input
               type="range"
-              min="40"
+              min="0"
               max="170"
               value={palettes[selected].saturation}
               onChange={event => onChange(selected, { saturation: Number(event.target.value) })}

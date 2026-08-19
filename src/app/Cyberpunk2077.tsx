@@ -181,6 +181,7 @@ export default function Cyberpunk2077() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
   const [leaderboardOpen, setLeaderboardOpen] = useState(false)
   const [scoreStatus, setScoreStatus] = useState('')
+  const [moveAnimation, setMoveAnimation] = useState<{ direction: Direction; sequence: number } | null>(null)
   const chatEndRef = useRef<HTMLDivElement>(null)
   const touchStartRef = useRef<{ x: number; y: number } | null>(null)
 
@@ -221,6 +222,10 @@ export default function Cyberpunk2077() {
     setGrid(current => {
       const result = moveGrid(current, direction)
       if (!result.moved) return current
+      setMoveAnimation(previous => ({
+        direction,
+        sequence: (previous?.sequence ?? 0) + 1,
+      }))
       setScore(previous => {
         const nextScore = previous + result.gained
         setBest(currentBest => {
@@ -562,8 +567,12 @@ export default function Cyberpunk2077() {
             onTouchCancel={() => { touchStartRef.current = null }}
           >
             {grid.map((value, index) => (
-              <div key={index}
-                className={`flex items-center justify-center border text-2xl sm:text-3xl font-black font-mono transition-all duration-100 ${tileStyle(value)}`}>
+              <div
+                key={`${index}-${moveAnimation?.sequence ?? 0}`}
+                className={`flex items-center justify-center border text-2xl sm:text-3xl font-black font-mono transition-all duration-100 ${
+                  moveAnimation ? `cyber-tile-move-${moveAnimation.direction}` : ''
+                } ${tileStyle(value)}`}
+              >
                 {value || 0}
               </div>
             ))}

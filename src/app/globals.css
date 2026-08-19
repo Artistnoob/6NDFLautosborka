@@ -83,8 +83,39 @@ body.theme-cyberpunk {
   text-shadow: 0 0 5px rgba(255, 42, 109, 0.6);
 }
 
+@keyframes cyber-tile-left {
+  from { transform: translateX(24px) scale(0.96); }
+  to { transform: translateX(0) scale(1); }
+}
+
+@keyframes cyber-tile-right {
+  from { transform: translateX(-24px) scale(0.96); }
+  to { transform: translateX(0) scale(1); }
+}
+
+@keyframes cyber-tile-up {
+  from { transform: translateY(24px) scale(0.96); }
+  to { transform: translateY(0) scale(1); }
+}
+
+@keyframes cyber-tile-down {
+  from { transform: translateY(-24px) scale(0.96); }
+  to { transform: translateY(0) scale(1); }
+}
+
+.cyber-tile-move-left { animation: cyber-tile-left 170ms cubic-bezier(0.22, 0.8, 0.35, 1); }
+.cyber-tile-move-right { animation: cyber-tile-right 170ms cubic-bezier(0.22, 0.8, 0.35, 1); }
+.cyber-tile-move-up { animation: cyber-tile-up 170ms cubic-bezier(0.22, 0.8, 0.35, 1); }
+.cyber-tile-move-down { animation: cyber-tile-down 170ms cubic-bezier(0.22, 0.8, 0.35, 1); }
+
 @media (prefers-reduced-motion: reduce) {
-  .cyber-code-symbol { animation: none; }
+  .cyber-code-symbol,
+  .cyber-tile-move-left,
+  .cyber-tile-move-right,
+  .cyber-tile-move-up,
+  .cyber-tile-move-down {
+    animation: none;
+  }
 }
 
 @keyframes cyber-first-place-glow {
