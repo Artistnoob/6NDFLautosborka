@@ -421,6 +421,7 @@ export default function Cyberpunk2077() {
             {symbol}
           </span>
         ))}
+        <span className="cyber-rare-word">якушко</span>
       </div>
       <div className="relative border-b border-[#fcee09]/30 bg-[#fcee09] px-6 py-4 text-black">
         <div className="flex flex-wrap items-end justify-between gap-3">
