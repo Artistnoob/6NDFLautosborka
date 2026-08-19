@@ -200,3 +200,316 @@ body.theme-cyberpunk {
     animation: none;
   }
 }
+
+.cyber-game,
+.cyber-shell {
+  --cyber-bg: #07090d;
+  --cyber-panel: #07151a;
+  --cyber-banner: #fcee09;
+  --cyber-banner-text: #050506;
+  --cyber-banner-mark: #d60050;
+  --cyber-accent: #fcee09;
+  --cyber-line: #00f0ff;
+  --cyber-hot: #ff2a6d;
+  --cyber-text: #e8edf2;
+  --cyber-muted: #8ba5ad;
+  --cyber-number: #00f0ff;
+  --cyber-chat-name: #00f0ff;
+  --cyber-chat-text: #d5e1e5;
+  --cyber-chat-bg: #120811;
+}
+
+.cyber-game {
+  background: var(--cyber-bg);
+  color: var(--cyber-text);
+  border: 1px solid color-mix(in srgb, var(--cyber-accent) 35%, transparent);
+  box-shadow: 0 0 60px color-mix(in srgb, var(--cyber-accent) 8%, transparent);
+}
+
+.cyber-banner {
+  background: var(--cyber-banner);
+  color: var(--cyber-banner-text);
+  border-color: color-mix(in srgb, var(--cyber-banner) 70%, black);
+}
+
+.cyber-banner-mark {
+  color: var(--cyber-banner-mark);
+}
+
+.cyber-panel {
+  background: color-mix(in srgb, var(--cyber-panel) 90%, black);
+  border-color: color-mix(in srgb, var(--cyber-line) 35%, transparent);
+}
+
+.cyber-stat-panel {
+  background: color-mix(in srgb, var(--cyber-hot) 12%, #0b080a);
+  border-color: var(--cyber-hot);
+}
+
+.cyber-help {
+  background: rgba(0, 0, 0, 0.4);
+  border-color: color-mix(in srgb, var(--cyber-line) 18%, transparent);
+  color: var(--cyber-muted);
+}
+
+.cyber-text { color: var(--cyber-text); }
+.cyber-muted { color: var(--cyber-muted); }
+.cyber-accent-text { color: var(--cyber-accent); }
+.cyber-line-text { color: var(--cyber-line); }
+.cyber-hot-text { color: var(--cyber-hot); }
+.cyber-number { color: var(--cyber-number); }
+.cyber-chat-name { color: var(--cyber-chat-name); }
+.cyber-chat-text { color: var(--cyber-chat-text); }
+
+.cyber-status {
+  border-color: var(--cyber-line);
+  background: color-mix(in srgb, var(--cyber-line) 10%, transparent);
+  color: var(--cyber-line);
+}
+
+.cyber-input,
+.cyber-chat-input {
+  border-color: color-mix(in srgb, var(--cyber-line) 40%, transparent);
+  color: var(--cyber-number);
+}
+
+.cyber-chat-input {
+  border-color: color-mix(in srgb, var(--cyber-hot) 30%, transparent);
+  color: var(--cyber-chat-text);
+}
+
+.cyber-btn-accent {
+  border-color: color-mix(in srgb, var(--cyber-accent) 55%, transparent);
+  background: color-mix(in srgb, var(--cyber-accent) 10%, transparent);
+  color: var(--cyber-accent);
+}
+
+.cyber-btn-hot {
+  border-color: color-mix(in srgb, var(--cyber-hot) 45%, transparent);
+  background: color-mix(in srgb, var(--cyber-hot) 10%, transparent);
+  color: var(--cyber-hot);
+}
+
+.cyber-btn-line {
+  border-color: var(--cyber-line);
+  background: color-mix(in srgb, var(--cyber-line) 10%, transparent);
+  color: var(--cyber-line);
+}
+
+.cyber-board {
+  border-color: color-mix(in srgb, var(--cyber-line) 35%, transparent);
+  background: color-mix(in srgb, var(--cyber-bg) 92%, black);
+  box-shadow: inset 0 0 40px color-mix(in srgb, var(--cyber-line) 8%, transparent);
+}
+
+.cyber-chat {
+  background: var(--cyber-chat-bg);
+  border-color: color-mix(in srgb, var(--cyber-hot) 35%, transparent);
+}
+
+.cyber-chat-header,
+.cyber-chat-form {
+  border-color: color-mix(in srgb, var(--cyber-hot) 30%, transparent);
+  color: var(--cyber-hot);
+}
+
+.cyber-chat-item {
+  border-color: color-mix(in srgb, var(--cyber-line) 50%, transparent);
+}
+
+.cyber-send {
+  background: var(--cyber-hot);
+  color: var(--cyber-banner-text);
+}
+
+.cyber-rank-row {
+  border-color: color-mix(in srgb, var(--cyber-line) 18%, transparent);
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.cyber-rank-row.is-podium {
+  border-color: color-mix(in srgb, var(--cyber-line) 35%, transparent);
+  background: color-mix(in srgb, var(--cyber-line) 5%, transparent);
+}
+
+.cyber-rank-row.is-first {
+  border-color: color-mix(in srgb, var(--cyber-accent) 70%, transparent);
+  background: color-mix(in srgb, var(--cyber-accent) 10%, transparent);
+}
+
+.cyber-rank-index { color: #65777d; }
+.cyber-rank-index.is-first { color: var(--cyber-accent); }
+.cyber-rank-name { color: var(--cyber-text); }
+
+.cyber-tile {
+  border-style: solid;
+}
+
+.cyber-tile-empty {
+  background: rgba(0, 0, 0, 0.35);
+  border-color: rgba(255, 255, 255, 0.05);
+  color: transparent;
+}
+
+.cyber-preset-classic .cyber-tile-2 { background: #2a3027; border-color: rgba(252, 238, 9, 0.3); color: #fcee09; }
+.cyber-preset-classic .cyber-tile-16 { background: #183d39; border-color: rgba(0, 240, 255, 0.4); color: #00f0ff; }
+.cyber-preset-classic .cyber-tile-64 { background: #4b1637; border-color: rgba(255, 42, 109, 0.5); color: #ff5b91; }
+.cyber-preset-classic .cyber-tile-256 { background: #5a4105; border-color: rgba(252, 238, 9, 0.6); color: #fff56a; }
+.cyber-preset-classic .cyber-tile-high { background: #fcee09; border-color: #fff; color: #000; box-shadow: 0 0 24px rgba(252, 238, 9, 0.45); }
+
+.cyber-preset-arasaka,
+.cyber-shell.cyber-preset-arasaka {
+  --cyber-bg: #050506;
+  --cyber-panel: #12080b;
+  --cyber-banner: #d71936;
+  --cyber-banner-text: #050506;
+  --cyber-banner-mark: #050506;
+  --cyber-accent: #ff263e;
+  --cyber-line: #ff263e;
+  --cyber-hot: #ff263e;
+  --cyber-text: #e8edf2;
+  --cyber-muted: #8f979c;
+  --cyber-number: #b7f1ff;
+  --cyber-chat-name: #b7f1ff;
+  --cyber-chat-text: #b7f1ff;
+  --cyber-chat-bg: #0a0507;
+}
+
+.cyber-preset-arasaka .cyber-tile-2,
+.cyber-preset-arasaka .cyber-tile-16,
+.cyber-preset-arasaka .cyber-tile-64,
+.cyber-preset-arasaka .cyber-tile-256 {
+  background: #14090c;
+  border-color: rgba(255, 38, 62, 0.55);
+  color: #b7f1ff;
+}
+
+.cyber-preset-arasaka .cyber-tile-high {
+  background: #d71936;
+  border-color: #ff5066;
+  color: #b7f1ff;
+}
+
+.cyber-preset-arasaka .cyber-code-symbol,
+.cyber-preset-arasaka .cyber-rare-word {
+  color: #ff263e !important;
+  text-shadow: 0 0 6px rgba(255, 38, 62, 0.7) !important;
+}
+
+.cyber-preset-arasaka .cyber-first-place-name {
+  animation: none;
+  color: #b7f1ff;
+  text-shadow: 0 0 6px rgba(183, 241, 255, 0.45);
+}
+
+.cyber-preset-arasaka .cyber-legends-button {
+  animation: none;
+  box-shadow:
+    inset 0 0 8px rgba(255, 38, 62, 0.12),
+    0 0 8px rgba(255, 38, 62, 0.55);
+}
+
+.cyber-preset-silverhand .cyber-first-place-name {
+  animation: none;
+  color: #fcee09;
+  text-shadow: 0 0 6px rgba(252, 238, 9, 0.55);
+}
+
+.cyber-preset-silverhand,
+.cyber-shell.cyber-preset-silverhand {
+  --cyber-bg: #05080b;
+  --cyber-panel: #11130d;
+  --cyber-banner: #fcee09;
+  --cyber-banner-text: #05080b;
+  --cyber-banner-mark: #05080b;
+  --cyber-accent: #fcee09;
+  --cyber-line: #fcee09;
+  --cyber-hot: #fcee09;
+  --cyber-text: #fcee09;
+  --cyber-muted: #d8c84a;
+  --cyber-number: #fcee09;
+  --cyber-chat-name: #fcee09;
+  --cyber-chat-text: #fcee09;
+  --cyber-chat-bg: #0a0c08;
+}
+
+.cyber-preset-silverhand .cyber-tile-2,
+.cyber-preset-silverhand .cyber-tile-16,
+.cyber-preset-silverhand .cyber-tile-64,
+.cyber-preset-silverhand .cyber-tile-256 {
+  background: #14160e;
+  border-color: rgba(252, 238, 9, 0.45);
+  color: #fcee09;
+}
+
+.cyber-preset-silverhand .cyber-tile-high {
+  background: #fcee09;
+  border-color: #fff56a;
+  color: #05080b;
+}
+
+.cyber-preset-silverhand .cyber-code-symbol,
+.cyber-preset-silverhand .cyber-rare-word {
+  color: #fcee09 !important;
+  text-shadow: 0 0 6px rgba(252, 238, 9, 0.68) !important;
+}
+
+.cyber-shell.cyber-preset-arasaka {
+  background-color: #050506 !important;
+}
+
+.cyber-shell.cyber-preset-arasaka .cyber-app-header {
+  background: #07090d;
+  border-color: rgba(215, 25, 54, 0.45);
+}
+
+.cyber-shell.cyber-preset-arasaka .cyber-app-logo {
+  background: #d71936;
+  color: #050506;
+}
+
+.cyber-shell.cyber-preset-silverhand {
+  background-color: #05080b !important;
+}
+
+.cyber-shell.cyber-preset-silverhand .cyber-app-header {
+  background: #07090d;
+  border-color: rgba(252, 238, 9, 0.3);
+  color: #fcee09;
+}
+
+.cyber-shell.cyber-preset-silverhand .cyber-app-logo {
+  background: #fcee09;
+  color: #05080b;
+}
+
+.cyber-mode-button-arasaka,
+.cyber-mode-button-arasaka:hover {
+  background: #d71936 !important;
+  color: #050506 !important;
+  border-color: #ff5066 !important;
+  box-shadow: 0 0 18px rgba(215, 25, 54, 0.45) !important;
+}
+
+.cyber-preset-menu-arasaka button,
+.cyber-preset-menu-arasaka {
+  color: #b7f1ff;
+  border-color: rgba(215, 25, 54, 0.55) !important;
+}
+
+.cyber-preset-menu-arasaka > button {
+  color: #ff263e !important;
+}
+
+.cyber-mode-button-silverhand,
+.cyber-mode-button-silverhand:hover {
+  background: #fcee09 !important;
+  color: #05080b !important;
+  border-color: #fff56a !important;
+}
+
+.cyber-preset-menu-silverhand,
+.cyber-preset-menu-silverhand button {
+  color: #fcee09 !important;
+  border-color: rgba(252, 238, 9, 0.5) !important;
+}

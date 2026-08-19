@@ -119,12 +119,12 @@ function canMove(grid: number[]): boolean {
 }
 
 function tileStyle(value: number): string {
-  if (!value) return 'bg-black/35 border-white/5 text-transparent'
-  if (value <= 4) return 'bg-[#2a3027] border-[#fcee09]/30 text-[#fcee09]'
-  if (value <= 16) return 'bg-[#183d39] border-[#00f0ff]/40 text-[#00f0ff]'
-  if (value <= 64) return 'bg-[#4b1637] border-[#ff2a6d]/50 text-[#ff5b91]'
-  if (value <= 256) return 'bg-[#5a4105] border-[#fcee09]/60 text-[#fff56a]'
-  return 'bg-[#fcee09] border-white text-black shadow-[0_0_24px_rgba(252,238,9,.45)]'
+  if (!value) return 'cyber-tile cyber-tile-empty'
+  if (value <= 4) return 'cyber-tile cyber-tile-2'
+  if (value <= 16) return 'cyber-tile cyber-tile-16'
+  if (value <= 64) return 'cyber-tile cyber-tile-64'
+  if (value <= 256) return 'cyber-tile cyber-tile-256'
+  return 'cyber-tile cyber-tile-high'
 }
 
 function tileTextSize(value: number): string {
@@ -182,7 +182,11 @@ function RankIcon({ rank }: { rank: number }) {
   )
 }
 
-export default function Cyberpunk2077() {
+export default function Cyberpunk2077({
+  preset = 'classic',
+}: {
+  preset?: 'classic' | 'arasaka' | 'silverhand'
+}) {
   const [grid, setGrid] = useState<number[]>(EMPTY_GRID)
   const [score, setScore] = useState(0)
   const [best, setBest] = useState(0)
@@ -445,7 +449,7 @@ export default function Cyberpunk2077() {
     leaderboardView === 'monthly' ? 'МЕСЯЦ СЛАВЫ' : 'ЛЕГЕНДЫ НАЙТ-СИТИ'
 
   return (
-    <div className="relative min-h-[calc(100vh-190px)] overflow-hidden rounded-2xl border border-[#fcee09]/35 bg-[#07090d] text-[#e8edf2] shadow-[0_0_60px_rgba(252,238,9,.08)]">
+    <div className={`cyber-game cyber-preset-${preset} relative min-h-[calc(100vh-190px)] overflow-hidden rounded-2xl`}>
       <div className="pointer-events-none absolute inset-0 opacity-20"
         style={{
           backgroundImage: 'linear-gradient(rgba(0,240,255,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(0,240,255,.08) 1px, transparent 1px)',
@@ -469,11 +473,11 @@ export default function Cyberpunk2077() {
         ))}
         <span className="cyber-rare-word">якушко</span>
       </div>
-      <div className="relative border-b border-[#fcee09]/30 bg-[#fcee09] px-6 py-4 text-black">
+      <div className="cyber-banner relative border-b px-6 py-4">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <div className="text-xs font-black tracking-[.45em]">NIGHT CITY // SUBNET</div>
-            <h1 className="text-4xl font-black italic tracking-tight">2048 <span className="text-[#d60050]">2077</span></h1>
+            <h1 className="text-4xl font-black italic tracking-tight">2048 <span className="cyber-banner-mark">2077</span></h1>
           </div>
           <div className="font-mono text-xs">
             CONNECTION: {{
@@ -488,8 +492,8 @@ export default function Cyberpunk2077() {
 
       {leaderboardOpen && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm">
-          <section className="cyber-leaderboard w-full max-w-xl border border-[#fcee09]/60 bg-[#07090d] shadow-[0_0_50px_rgba(252,238,9,.18)]">
-            <div className="flex items-center justify-between border-b border-[#fcee09]/35 bg-[#fcee09] px-5 py-3 text-black">
+          <section className="cyber-leaderboard cyber-panel w-full max-w-xl border">
+            <div className="cyber-banner flex items-center justify-between border-b px-5 py-3">
               <div className="flex items-center gap-2 font-black italic tracking-widest">
                 <Trophy className="h-5 w-5" /> {leaderboardTitle}
               </div>
@@ -499,12 +503,12 @@ export default function Cyberpunk2077() {
             </div>
             <div className="max-h-[65vh] overflow-y-auto p-4">
               {scoreStatus && (
-                <div className="mb-3 border-l-2 border-[#00f0ff] bg-[#00f0ff]/10 px-3 py-2 text-xs text-[#00f0ff]">
+                <div className="cyber-status mb-3 border-l-2 px-3 py-2 text-xs">
                   {scoreStatus}
                 </div>
               )}
               {leaderboard.length === 0 ? (
-                <div className="py-12 text-center text-sm text-[#8ba5ad]">
+                <div className="cyber-muted py-12 text-center text-sm">
                   {leaderboardView === 'monthly'
                     ? 'В этом месяце рейтинг пока пуст. Откройте месяц славы первым.'
                     : 'Рейтинг пока пуст. Станьте первой легендой Найт-Сити.'}
@@ -513,25 +517,19 @@ export default function Cyberpunk2077() {
                 <ol className="space-y-2">
                   {leaderboard.map((entry, index) => (
                     <li key={entry.id}
-                      className={`grid grid-cols-[42px_34px_1fr_auto] items-center gap-2 border px-3 py-2 ${
-                        index === 0
-                          ? 'border-[#fcee09]/70 bg-[#fcee09]/10'
-                          : index < 3
-                            ? 'border-[#00f0ff]/35 bg-[#00f0ff]/5'
-                            : 'border-white/10 bg-black/30'
+                      className={`cyber-rank-row grid grid-cols-[42px_34px_1fr_auto] items-center gap-2 border px-3 py-2 ${
+                        index === 0 ? 'is-first' : index < 3 ? 'is-podium' : ''
                       }`}>
-                      <span className={`text-lg font-black ${index === 0 ? 'text-[#fcee09]' : 'text-[#65777d]'}`}>
+                      <span className={`cyber-rank-index text-lg font-black ${index === 0 ? 'is-first' : ''}`}>
                         #{index + 1}
                       </span>
                       <RankIcon rank={index + 1} />
-                      <span className={`truncate text-sm ${
-                        index === 0
-                          ? 'cyber-first-place-name font-bold text-[#ff657f]'
-                          : 'text-[#d5e1e5]'
+                      <span className={`cyber-rank-name truncate text-sm ${
+                        index === 0 ? 'cyber-first-place-name font-bold' : ''
                       }`}>
                         {entry.nickname}
                       </span>
-                      <span className="text-lg font-black text-[#00f0ff]">{entry.score}</span>
+                      <span className="cyber-number text-lg font-black">{entry.score}</span>
                     </li>
                   ))}
                 </ol>
@@ -543,11 +541,11 @@ export default function Cyberpunk2077() {
 
       <div className="relative grid grid-cols-1 xl:grid-cols-[240px_minmax(420px,1fr)_340px] gap-5 p-5">
         <aside className="space-y-4">
-          <section className="border border-[#00f0ff]/35 bg-[#07151a]/90 p-4 [clip-path:polygon(0_12px,12px_0,100%_0,100%_calc(100%-12px),calc(100%-12px)_100%,0_100%)]">
-            <div className="flex items-center gap-2 text-[#00f0ff] text-xs font-bold tracking-widest mb-3">
+          <section className="cyber-panel border p-4 [clip-path:polygon(0_12px,12px_0,100%_0,100%_calc(100%-12px),calc(100%-12px)_100%,0_100%)]">
+            <div className="cyber-line-text mb-3 flex items-center gap-2 text-xs font-bold tracking-widest">
               <UserRound className="w-4 h-4" /> ИДЕНТИФИКАТОР
             </div>
-            <label className="text-[10px] text-[#8ba5ad]">НИКНЕЙМ</label>
+            <label className="cyber-muted text-[10px]">НИКНЕЙМ</label>
             <input
               value={nickname}
               maxLength={30}
@@ -555,22 +553,22 @@ export default function Cyberpunk2077() {
                 setNickname(event.target.value)
                 localStorage.setItem('cyber-2077-nickname', event.target.value)
               }}
-              className="mt-1 w-full border border-[#00f0ff]/40 bg-black/60 px-3 py-2 font-mono text-sm text-[#00f0ff] outline-none focus:border-[#fcee09]"
+              className="cyber-input mt-1 w-full border bg-black/60 px-3 py-2 font-mono text-sm outline-none"
             />
           </section>
 
-          <section className="border-l-4 border-[#ff2a6d] bg-[#1b0b17]/90 p-4">
-            <div className="flex items-center gap-2 text-[#ff5b91] text-xs font-bold tracking-widest">
+          <section className="cyber-stat-panel border-l-4 p-4">
+            <div className="cyber-hot-text flex items-center gap-2 text-xs font-bold tracking-widest">
               <Trophy className="w-4 h-4" /> СТАТИСТИКА
             </div>
             <div className="mt-4 grid grid-cols-2 gap-3 font-mono">
-              <div><div className="text-[10px] text-[#8ba5ad]">СЧЁТ</div><div className="text-xl text-[#fcee09]">{score}</div></div>
-              <div><div className="text-[10px] text-[#8ba5ad]">РЕКОРД</div><div className="text-xl text-[#00f0ff]">{best}</div></div>
+              <div><div className="cyber-muted text-[10px]">СЧЁТ</div><div className="cyber-number text-xl">{score}</div></div>
+              <div><div className="cyber-muted text-[10px]">РЕКОРД</div><div className="cyber-number text-xl">{best}</div></div>
             </div>
           </section>
 
-          <section className="border border-white/10 bg-black/40 p-4 text-xs text-[#8ba5ad]">
-            <div className="font-bold text-white mb-2">УПРАВЛЕНИЕ</div>
+          <section className="cyber-help border p-4 text-xs">
+            <div className="cyber-text mb-2 font-bold">УПРАВЛЕНИЕ</div>
             Стрелки или WASD. На телефоне управляйте свайпами по игровому полю.
             Соединяйте одинаковые нейрочипы и доберитесь до 2048.
           </section>
@@ -578,7 +576,7 @@ export default function Cyberpunk2077() {
           <div className="grid grid-cols-1 gap-2">
             <button
               onClick={() => void becomeLegend()}
-              className="inline-flex items-center justify-center gap-2 border border-[#fcee09]/55 bg-[#fcee09]/10 px-3 py-2.5 text-xs font-black text-[#fcee09] hover:bg-[#fcee09] hover:text-black"
+              className="cyber-btn-accent inline-flex items-center justify-center gap-2 border px-3 py-2.5 text-xs font-black"
             >
               <Crown className="h-4 w-4" /> СТАТЬ ЛЕГЕНДОЙ
             </button>
@@ -588,7 +586,7 @@ export default function Cyberpunk2077() {
                 setLeaderboardOpen(true)
                 void loadLeaderboards()
               }}
-              className="inline-flex items-center justify-center gap-2 border border-[#ff2a6d]/45 bg-[#ff2a6d]/10 px-3 py-2.5 text-xs font-bold text-[#ff6b9b] hover:bg-[#ff2a6d] hover:text-black"
+              className="cyber-btn-hot inline-flex items-center justify-center gap-2 border px-3 py-2.5 text-xs font-bold"
             >
               <ListOrdered className="h-4 w-4" /> МЕСЯЦ СЛАВЫ
             </button>
@@ -598,33 +596,33 @@ export default function Cyberpunk2077() {
                 setLeaderboardOpen(true)
                 void loadLeaderboards()
               }}
-              className="cyber-legends-button inline-flex items-center justify-center gap-2 border border-[#00f0ff] bg-[#00f0ff]/10 px-3 py-2.5 text-xs font-black text-[#8dfaff] hover:bg-[#00f0ff] hover:text-black"
+              className="cyber-legends-button cyber-btn-line inline-flex items-center justify-center gap-2 border px-3 py-2.5 text-xs font-black"
             >
               <Crown className="h-4 w-4" /> ЛЕГЕНДЫ НАЙТ-СИТИ
             </button>
             {scoreStatus && !leaderboardOpen && (
-              <div className="text-[10px] leading-relaxed text-[#ff5b91]">{scoreStatus}</div>
+              <div className="cyber-hot-text text-[10px] leading-relaxed">{scoreStatus}</div>
             )}
           </div>
         </aside>
 
         <main className="flex flex-col items-center">
           <div className="mb-4 flex w-full max-w-[560px] items-center justify-between">
-            <div className="flex items-center gap-2 text-[#fcee09]">
+            <div className="cyber-accent-text flex items-center gap-2">
               <Gamepad2 className="w-5 h-5" />
               <span className="font-bold tracking-widest">BREACH PROTOCOL</span>
-              <span className="border-l border-[#fcee09]/35 pl-2 font-mono text-[10px] text-[#8ba5ad]">
+              <span className="cyber-muted border-l pl-2 font-mono text-[10px]">
                 ЦЕЛЬ: {(endlessMode ? ENDLESS_TARGET : STANDARD_TARGET).toLocaleString('ru-RU')}
               </span>
             </div>
             <button onClick={resetGame}
-              className="inline-flex items-center gap-2 border border-[#fcee09]/50 bg-[#fcee09]/10 px-3 py-2 text-xs font-bold text-[#fcee09] hover:bg-[#fcee09] hover:text-black">
+              className="cyber-btn-accent inline-flex items-center gap-2 border px-3 py-2 text-xs font-bold">
               <RotateCcw className="w-4 h-4" /> НОВАЯ ИГРА
             </button>
           </div>
 
           <div
-            className="relative grid aspect-square w-full max-w-[560px] touch-none select-none grid-cols-4 gap-3 border-2 border-[#00f0ff]/35 bg-[#03070a]/95 p-3 shadow-[inset_0_0_40px_rgba(0,240,255,.08)]"
+            className="cyber-board relative grid aspect-square w-full max-w-[560px] touch-none select-none grid-cols-4 gap-3 border-2 p-3"
             onTouchStart={startBoardSwipe}
             onTouchEnd={finishBoardSwipe}
             onTouchCancel={() => { touchStartRef.current = null }}
@@ -632,16 +630,16 @@ export default function Cyberpunk2077() {
             {grid.map((value, index) => (
               <div
                 key={`${index}-${moveAnimation?.sequence ?? 0}`}
-                className={`flex items-center justify-center border font-black font-mono transition-all duration-100 ${
+                className={`${tileStyle(value)} flex items-center justify-center border font-black font-mono transition-all duration-100 ${
                   moveAnimation ? `cyber-tile-move-${moveAnimation.direction}` : ''
-                } ${tileTextSize(value)} ${tileStyle(value)}`}
+                } ${tileTextSize(value)}`}
               >
                 {value || 0}
               </div>
             ))}
             {(gameOver || standardWon || endlessMilestoneReached) && (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/85 backdrop-blur-sm">
-                <div className="px-4 text-center text-3xl font-black text-[#fcee09]">
+                <div className="cyber-accent-text px-4 text-center text-3xl font-black">
                   {endlessMilestoneReached
                     ? 'NIGHT CITY LEGEND'
                     : standardWon
@@ -649,18 +647,18 @@ export default function Cyberpunk2077() {
                       : 'SYSTEM FAILURE'}
                 </div>
                 {endlessMilestoneReached && (
-                  <div className="mt-2 font-mono text-xs text-[#00f0ff]">
+                  <div className="cyber-number mt-2 font-mono text-xs">
                     ПЛИТКА {ENDLESS_TARGET.toLocaleString('ru-RU')} СОБРАНА
                   </div>
                 )}
                 <div className="mt-4 flex flex-wrap justify-center gap-3">
-                  <button onClick={resetGame} className="bg-[#fcee09] px-5 py-2 font-bold text-black">
+                  <button onClick={resetGame} className="cyber-banner px-5 py-2 font-bold">
                     ПЕРЕЗАПУСК
                   </button>
                   {standardWon && (
                     <button
                       onClick={() => setEndlessMode(true)}
-                      className="border border-[#00f0ff] bg-[#00f0ff]/15 px-5 py-2 font-bold text-[#00f0ff] hover:bg-[#00f0ff] hover:text-black"
+                      className="cyber-btn-line border px-5 py-2 font-bold"
                     >
                       БЕСКОНЕЧНЫЙ РЕЖИМ
                     </button>
@@ -668,7 +666,7 @@ export default function Cyberpunk2077() {
                   {endlessMilestoneReached && (
                     <button
                       onClick={() => setEndlessMilestoneDismissed(true)}
-                      className="border border-[#ff2a6d] bg-[#ff2a6d]/15 px-5 py-2 font-bold text-[#ff5b91] hover:bg-[#ff2a6d] hover:text-black"
+                      className="cyber-btn-hot border px-5 py-2 font-bold"
                     >
                       ПРОДОЛЖИТЬ
                     </button>
@@ -679,32 +677,32 @@ export default function Cyberpunk2077() {
           </div>
         </main>
 
-        <aside className="flex min-h-[560px] flex-col border border-[#ff2a6d]/35 bg-[#120811]/90">
-          <div className="flex items-center gap-2 border-b border-[#ff2a6d]/30 px-4 py-3 text-[#ff5b91]">
+        <aside className="cyber-chat flex min-h-[560px] flex-col border">
+          <div className="cyber-chat-header flex items-center gap-2 border-b px-4 py-3">
             <MessageSquare className="w-4 h-4" />
             <span className="text-xs font-bold tracking-widest">GLOBAL CHAT // 2077</span>
           </div>
-          <div className="flex-1 space-y-3 overflow-y-auto p-4 max-h-[560px]">
+          <div className="max-h-[560px] flex-1 space-y-3 overflow-y-auto p-4">
             {messages.length === 0 && (
-              <div className="text-center text-xs text-[#8ba5ad] mt-8">
+              <div className="cyber-muted mt-8 text-center text-xs">
                 {supabase ? 'Канал пуст. Оставьте первое сообщение.' : 'Чат ожидает подключения Supabase.'}
               </div>
             )}
             {messages.map(item => (
-              <div key={item.id} className="border-l-2 border-[#00f0ff]/50 bg-black/35 px-3 py-2">
+              <div key={item.id} className="cyber-chat-item border-l-2 bg-black/35 px-3 py-2">
                 <div className="flex justify-between gap-2">
-                  <span className="text-xs font-bold text-[#00f0ff]">{item.nickname}</span>
-                  <span className="text-[9px] text-[#65777d]">
+                  <span className="cyber-chat-name text-xs font-bold">{item.nickname}</span>
+                  <span className="cyber-muted text-[9px]">
                     {new Date(item.created_at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
-                <div className="mt-1 break-words text-xs leading-relaxed text-[#d5e1e5]">{item.message}</div>
+                <div className="cyber-chat-text mt-1 break-words text-xs leading-relaxed">{item.message}</div>
               </div>
             ))}
             <div ref={chatEndRef} />
           </div>
-          <form onSubmit={sendMessage} className="border-t border-[#ff2a6d]/30 p-3">
-            {chatError && <div className="mb-2 text-[10px] text-[#ff5b91]">{chatError}</div>}
+          <form onSubmit={sendMessage} className="cyber-chat-form border-t p-3">
+            {chatError && <div className="cyber-hot-text mb-2 text-[10px]">{chatError}</div>}
             <div className="flex gap-2">
               <input
                 value={message}
@@ -712,12 +710,12 @@ export default function Cyberpunk2077() {
                 maxLength={500}
                 placeholder="Сообщение в сеть..."
                 disabled={!supabase}
-                className="min-w-0 flex-1 border border-[#ff2a6d]/30 bg-black/60 px-3 py-2 text-xs outline-none placeholder:text-[#6b4c61] focus:border-[#00f0ff]"
+                className="cyber-chat-input min-w-0 flex-1 border bg-black/60 px-3 py-2 text-xs outline-none"
               />
               <button
                 type="submit"
                 disabled={!supabase || !nickname.trim() || !message.trim()}
-                className="bg-[#ff2a6d] px-3 text-black disabled:opacity-30">
+                className="cyber-send px-3 disabled:opacity-30">
                 <Send className="w-4 h-4" />
               </button>
             </div>

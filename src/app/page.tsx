@@ -28,22 +28,18 @@ type FileBucket = 'notifs' | 'reports' | 'prevReports'
 const CYBER_PRESETS: Record<CyberPreset, {
   label: string
   description: string
-  filter: string | null
 }> = {
   classic: {
     label: 'Классика Найт-Сити',
     description: 'Жёлтый, бирюзовый и неоново-розовый',
-    filter: null,
   },
   arasaka: {
     label: 'Арасака',
-    description: 'Глубокий чёрный и корпоративный красный',
-    filter: 'grayscale(1) sepia(1) saturate(7) hue-rotate(315deg) brightness(72%) contrast(135%)',
+    description: 'Чёрный фон, красные контуры, голубые цифры и чат',
   },
   silverhand: {
     label: 'Сильверхэнд',
-    description: 'Выцветший янтарный интерфейс с холодным металлом',
-    filter: 'grayscale(0.2) sepia(0.55) saturate(1.8) hue-rotate(155deg) brightness(88%) contrast(118%)',
+    description: 'Жёлтый текст, ники и цифры интерфейса Джонни',
   },
 }
 
@@ -735,7 +731,7 @@ export default function Home() {
         setMode('cyberpunk')
         setCyberPresetsOpen(false)
       }}
-      className={`fixed top-3 right-3 z-[70] px-3 py-1.5 font-mono text-xs font-black italic tracking-[.25em] transition-all ${
+      className={`cyber-mode-button cyber-mode-button-${cyberPreset} fixed top-3 right-3 z-[70] px-3 py-1.5 font-mono text-xs font-black italic tracking-[.25em] transition-all ${
         isCyberpunk
           ? 'bg-[#fcee09] text-black shadow-[0_0_20px_rgba(252,238,9,.45)]'
           : 'border border-[#fcee09]/60 bg-black/90 text-[#fcee09] hover:bg-[#fcee09] hover:text-black'
@@ -744,7 +740,7 @@ export default function Home() {
       2077
     </button>
     {isCyberpunk && (
-      <div className="fixed right-3 top-12 z-[70] w-64 font-mono">
+      <div className={`cyber-preset-menu cyber-preset-menu-${cyberPreset} fixed right-3 top-12 z-[70] w-64 font-mono`}>
         <button
           onClick={() => setCyberPresetsOpen(open => !open)}
           className="flex w-full items-center justify-between border border-[#fcee09]/50 bg-black/95 px-3 py-2 text-left text-[10px] font-bold tracking-wider text-[#fcee09] shadow-[0_0_12px_rgba(252,238,9,.16)] hover:border-[#00f0ff]"
@@ -775,7 +771,7 @@ export default function Home() {
         )}
       </div>
     )}
-    <div className={`min-h-screen transition-colors duration-500 ${
+    <div className={`${isCyberpunk ? `cyber-shell cyber-preset-${cyberPreset}` : ''} min-h-screen transition-colors duration-500 ${
       isAnnual
         ? 'bg-annual-bg'
         : isReconciliation
@@ -784,10 +780,7 @@ export default function Home() {
             ? 'bg-[#020306]'
             : 'bg-bg'
     }`} style={{
-      filter:
-        isCyberpunk && CYBER_PRESETS[cyberPreset].filter
-          ? CYBER_PRESETS[cyberPreset].filter ?? undefined
-          : sectionFilter(mode, sectionPalettes[mode]),
+      filter: isCyberpunk ? 'none' : sectionFilter(mode, sectionPalettes[mode]),
     }}>
       {isAnnual && annualTaxIssues.length > 0 && (
         <div className="fixed inset-0 z-50 bg-black/70 p-4 flex items-center justify-center">
@@ -890,7 +883,7 @@ export default function Home() {
           : <ExcludePanel excluded={excluded} onToggle={f => toggleExclude(f, false)} />
       )}
 
-      <header className={`border-b sticky top-0 z-10 transition-colors duration-500 ${
+      <header className={`cyber-app-header border-b sticky top-0 z-10 transition-colors duration-500 ${
         isAnnual
           ? 'border-annual-border bg-annual-surface'
           : isReconciliation
@@ -901,7 +894,7 @@ export default function Home() {
       }`}>
         <div className={`${isReconciliation || isCyberpunk ? 'max-w-7xl' : 'max-w-3xl'} mx-auto px-6 py-4 flex flex-col gap-4`}>
           <div className="flex items-center gap-3">
-            <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-mono text-sm font-medium flex-shrink-0 ${
+            <div className={`cyber-app-logo w-9 h-9 rounded-xl flex items-center justify-center font-mono text-sm font-medium flex-shrink-0 ${
               isAnnual
                 ? 'bg-annual-accent text-white'
                 : isReconciliation
@@ -937,7 +930,7 @@ export default function Home() {
         {isReconciliation
           ? <NdflReconciliation />
           : isCyberpunk
-            ? <Cyberpunk2077 />
+            ? <Cyberpunk2077 preset={cyberPreset} />
           : isAnnual
             ? renderWorkflow(true)
             : renderWorkflow(false)}
