@@ -28,6 +28,8 @@ interface LeaderboardEntry {
   achieved_at: string
 }
 
+type LeaderboardView = 'all-time' | 'monthly'
+
 const EMPTY_GRID = Array<number>(16).fill(0)
 const STANDARD_TARGET = 2048
 // В классической механике плитки являются степенями двойки, поэтому ближайшая
@@ -189,7 +191,9 @@ export default function Cyberpunk2077() {
   const [message, setMessage] = useState('')
   const [chatError, setChatError] = useState('')
   const [connectionState, setConnectionState] = useState<'offline' | 'connecting' | 'online' | 'error'>('offline')
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
+  const [allTimeLeaderboard, setAllTimeLeaderboard] = useState<LeaderboardEntry[]>([])
+  const [monthlyLeaderboard, setMonthlyLeaderboard] = useState<LeaderboardEntry[]>([])
+  const [leaderboardView, setLeaderboardView] = useState<LeaderboardView>('all-time')
   const [leaderboardOpen, setLeaderboardOpen] = useState(false)
   const [scoreStatus, setScoreStatus] = useState('')
   const [moveAnimation, setMoveAnimation] = useState<{ direction: Direction; sequence: number } | null>(null)
@@ -204,17 +208,29 @@ export default function Cyberpunk2077() {
     return url && key ? createClient(url, key) : null
   }, [])
 
-  const loadLeaderboard = useCallback(async () => {
+  const loadLeaderboards = useCallback(async () => {
     if (!supabase) return
     try {
-      const { data, error } = await supabase
-        .from('cyberpunk_scores')
-        .select('*')
-        .order('score', { ascending: false })
-        .order('achieved_at', { ascending: true })
-        .limit(20)
-      if (error) throw error
-      setLeaderboard((data ?? []) as LeaderboardEntry[])
+      const currentMonth = `${new Date().toISOString().slice(0, 7)}-01`
+      const [allTimeResult, monthlyResult] = await Promise.all([
+        supabase
+          .from('cyberpunk_scores')
+          .select('*')
+          .order('score', { ascending: false })
+          .order('achieved_at', { ascending: true })
+          .limit(20),
+        supabase
+          .from('cyberpunk_monthly_scores')
+          .select('*')
+          .eq('score_month', currentMonth)
+          .order('score', { ascending: false })
+          .order('achieved_at', { ascending: true })
+          .limit(20),
+      ])
+      if (allTimeResult.error) throw allTimeResult.error
+      if (monthlyResult.error) throw monthlyResult.error
+      setAllTimeLeaderboard((allTimeResult.data ?? []) as LeaderboardEntry[])
+      setMonthlyLeaderboard((monthlyResult.data ?? []) as LeaderboardEntry[])
     } catch (error) {
       setScoreStatus(readableSupabaseError(error))
     }
@@ -323,7 +339,7 @@ export default function Cyberpunk2077() {
         setChatError(readableSupabaseError(error))
       }
     })()
-    void loadLeaderboard()
+    void loadLeaderboards()
 
     const channel = supabase
       .channel('cyberpunk-2077-chat')
@@ -342,7 +358,12 @@ export default function Cyberpunk2077() {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'cyberpunk_scores' },
-        () => void loadLeaderboard(),
+        () => void loadLeaderboards(),
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'cyberpunk_monthly_scores' },
+        () => void loadLeaderboards(),
       )
       .subscribe(status => {
         if (!active) return
@@ -354,7 +375,7 @@ export default function Cyberpunk2077() {
       active = false
       void supabase.removeChannel(channel)
     }
-  }, [loadLeaderboard, supabase])
+  }, [loadLeaderboards, supabase])
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -399,7 +420,8 @@ export default function Cyberpunk2077() {
         player_score: score,
       })
       if (error) throw error
-      await loadLeaderboard()
+      await loadLeaderboards()
+      setLeaderboardView('all-time')
       setLeaderboardOpen(true)
       setScoreStatus(
         typeof data === 'number'
@@ -417,6 +439,10 @@ export default function Cyberpunk2077() {
     endlessMode &&
     !endlessMilestoneDismissed &&
     grid.some(value => value >= ENDLESS_TARGET)
+  const leaderboard =
+    leaderboardView === 'monthly' ? monthlyLeaderboard : allTimeLeaderboard
+  const leaderboardTitle =
+    leaderboardView === 'monthly' ? 'МЕСЯЦ СЛАВЫ' : 'ЛЕГЕНДЫ НАЙТ-СИТИ'
 
   return (
     <div className="relative min-h-[calc(100vh-190px)] overflow-hidden rounded-2xl border border-[#fcee09]/35 bg-[#07090d] text-[#e8edf2] shadow-[0_0_60px_rgba(252,238,9,.08)]">
@@ -465,7 +491,7 @@ export default function Cyberpunk2077() {
           <section className="cyber-leaderboard w-full max-w-xl border border-[#fcee09]/60 bg-[#07090d] shadow-[0_0_50px_rgba(252,238,9,.18)]">
             <div className="flex items-center justify-between border-b border-[#fcee09]/35 bg-[#fcee09] px-5 py-3 text-black">
               <div className="flex items-center gap-2 font-black italic tracking-widest">
-                <Trophy className="h-5 w-5" /> ТАБЛИЦА ЛЕГЕНД
+                <Trophy className="h-5 w-5" /> {leaderboardTitle}
               </div>
               <button onClick={() => setLeaderboardOpen(false)} aria-label="Закрыть таблицу рекордов">
                 <X className="h-5 w-5" />
@@ -479,7 +505,9 @@ export default function Cyberpunk2077() {
               )}
               {leaderboard.length === 0 ? (
                 <div className="py-12 text-center text-sm text-[#8ba5ad]">
-                  Рейтинг пока пуст. Станьте первой легендой Найт-Сити.
+                  {leaderboardView === 'monthly'
+                    ? 'В этом месяце рейтинг пока пуст. Откройте месяц славы первым.'
+                    : 'Рейтинг пока пуст. Станьте первой легендой Найт-Сити.'}
                 </div>
               ) : (
                 <ol className="space-y-2">
@@ -556,12 +584,23 @@ export default function Cyberpunk2077() {
             </button>
             <button
               onClick={() => {
+                setLeaderboardView('monthly')
                 setLeaderboardOpen(true)
-                void loadLeaderboard()
+                void loadLeaderboards()
               }}
-              className="inline-flex items-center justify-center gap-2 border border-[#00f0ff]/45 bg-[#00f0ff]/10 px-3 py-2.5 text-xs font-bold text-[#00f0ff] hover:bg-[#00f0ff] hover:text-black"
+              className="inline-flex items-center justify-center gap-2 border border-[#ff2a6d]/45 bg-[#ff2a6d]/10 px-3 py-2.5 text-xs font-bold text-[#ff6b9b] hover:bg-[#ff2a6d] hover:text-black"
             >
-              <ListOrdered className="h-4 w-4" /> ТАБЛИЦА РЕКОРДОВ
+              <ListOrdered className="h-4 w-4" /> МЕСЯЦ СЛАВЫ
+            </button>
+            <button
+              onClick={() => {
+                setLeaderboardView('all-time')
+                setLeaderboardOpen(true)
+                void loadLeaderboards()
+              }}
+              className="cyber-legends-button inline-flex items-center justify-center gap-2 border border-[#00f0ff] bg-[#00f0ff]/10 px-3 py-2.5 text-xs font-black text-[#8dfaff] hover:bg-[#00f0ff] hover:text-black"
+            >
+              <Crown className="h-4 w-4" /> ЛЕГЕНДЫ НАЙТ-СИТИ
             </button>
             {scoreStatus && !leaderboardOpen && (
               <div className="text-[10px] leading-relaxed text-[#ff5b91]">{scoreStatus}</div>

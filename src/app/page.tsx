@@ -22,7 +22,30 @@ import {
 } from '@/lib/matching'
 
 type ReportMode = 'reconciliation' | 'quarterly' | 'annual' | 'cyberpunk'
+type CyberPreset = 'classic' | 'arasaka' | 'silverhand'
 type FileBucket = 'notifs' | 'reports' | 'prevReports'
+
+const CYBER_PRESETS: Record<CyberPreset, {
+  label: string
+  description: string
+  filter: string | null
+}> = {
+  classic: {
+    label: 'Классика Найт-Сити',
+    description: 'Жёлтый, бирюзовый и неоново-розовый',
+    filter: null,
+  },
+  arasaka: {
+    label: 'Арасака',
+    description: 'Глубокий чёрный и корпоративный красный',
+    filter: 'grayscale(1) sepia(1) saturate(7) hue-rotate(315deg) brightness(72%) contrast(135%)',
+  },
+  silverhand: {
+    label: 'Сильверхэнд',
+    description: 'Выцветший янтарный интерфейс с холодным металлом',
+    filter: 'grayscale(0.2) sepia(0.55) saturate(1.8) hue-rotate(155deg) brightness(88%) contrast(118%)',
+  },
+}
 
 interface UploadedFile {
   id: string
@@ -254,6 +277,8 @@ function downloadBlob(blob: Blob, name: string) {
 export default function Home() {
   const [mode, setMode] = useState<ReportMode>('quarterly')
   const [sectionPalettes, setSectionPalettes] = useState<SectionPalettes>(DEFAULT_SECTION_PALETTES)
+  const [cyberPreset, setCyberPreset] = useState<CyberPreset>('classic')
+  const [cyberPresetsOpen, setCyberPresetsOpen] = useState(false)
 
   const [notifs, setNotifs] = useState<UploadedFile[]>([])
   const [reports, setReports] = useState<UploadedFile[]>([])
@@ -706,7 +731,10 @@ export default function Home() {
       onReset={resetSectionPalette}
     />
     <button
-      onClick={() => setMode('cyberpunk')}
+      onClick={() => {
+        setMode('cyberpunk')
+        setCyberPresetsOpen(false)
+      }}
       className={`fixed top-3 right-3 z-[70] px-3 py-1.5 font-mono text-xs font-black italic tracking-[.25em] transition-all ${
         isCyberpunk
           ? 'bg-[#fcee09] text-black shadow-[0_0_20px_rgba(252,238,9,.45)]'
@@ -715,6 +743,38 @@ export default function Home() {
     >
       2077
     </button>
+    {isCyberpunk && (
+      <div className="fixed right-3 top-12 z-[70] w-64 font-mono">
+        <button
+          onClick={() => setCyberPresetsOpen(open => !open)}
+          className="flex w-full items-center justify-between border border-[#fcee09]/50 bg-black/95 px-3 py-2 text-left text-[10px] font-bold tracking-wider text-[#fcee09] shadow-[0_0_12px_rgba(252,238,9,.16)] hover:border-[#00f0ff]"
+        >
+          <span>ПРЕСЕТ: {CYBER_PRESETS[cyberPreset].label.toUpperCase()}</span>
+          <span>{cyberPresetsOpen ? '▲' : '▼'}</span>
+        </button>
+        {cyberPresetsOpen && (
+          <div className="mt-1 border border-[#00f0ff]/40 bg-[#05080b]/98 p-2 shadow-[0_0_24px_rgba(0,240,255,.18)]">
+            {(Object.keys(CYBER_PRESETS) as CyberPreset[]).map(preset => (
+              <button
+                key={preset}
+                onClick={() => {
+                  setCyberPreset(preset)
+                  setCyberPresetsOpen(false)
+                }}
+                className={`mb-1 w-full border-l-2 px-3 py-2 text-left last:mb-0 ${
+                  cyberPreset === preset
+                    ? 'border-[#fcee09] bg-[#fcee09]/12 text-[#fcee09]'
+                    : 'border-[#263840] text-[#9db0b7] hover:border-[#00f0ff] hover:bg-[#00f0ff]/8 hover:text-[#00f0ff]'
+                }`}
+              >
+                <span className="block text-[11px] font-bold">{CYBER_PRESETS[preset].label}</span>
+                <span className="mt-0.5 block text-[9px] opacity-70">{CYBER_PRESETS[preset].description}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    )}
     <div className={`min-h-screen transition-colors duration-500 ${
       isAnnual
         ? 'bg-annual-bg'
@@ -724,7 +784,10 @@ export default function Home() {
             ? 'bg-[#020306]'
             : 'bg-bg'
     }`} style={{
-      filter: sectionFilter(mode, sectionPalettes[mode]),
+      filter:
+        isCyberpunk && CYBER_PRESETS[cyberPreset].filter
+          ? CYBER_PRESETS[cyberPreset].filter ?? undefined
+          : sectionFilter(mode, sectionPalettes[mode]),
     }}>
       {isAnnual && annualTaxIssues.length > 0 && (
         <div className="fixed inset-0 z-50 bg-black/70 p-4 flex items-center justify-center">
@@ -857,7 +920,7 @@ export default function Home() {
       </header>
 
       <main className={`${isReconciliation || isCyberpunk ? 'max-w-7xl' : 'max-w-3xl lg:pl-60'} mx-auto px-6 py-12 transition-colors duration-500`}>
-        {!isAnnual && !isReconciliation && (
+        {mode === 'quarterly' && (
           <div className="lg:hidden mb-6 bg-surface border border-border rounded-xl p-4">
             <div className="text-xs font-semibold text-[#e8e9f0] mb-3">Исключить для заполнения</div>
             <div className="flex flex-col gap-2">
