@@ -39,7 +39,7 @@ const CYBER_PRESETS: Record<CyberPreset, {
   },
   silverhand: {
     label: 'Сильверхэнд',
-    description: 'Тёмно-синие надписи, ники и цифры'
+    description: 'Светло-синие надписи с неоновой обводкой'
   },
 }
 

@@ -411,8 +411,11 @@ body.theme-cyberpunk {
 
 .cyber-preset-silverhand .cyber-first-place-name {
   animation: none;
-  color: #163a7a;
-  text-shadow: 0 0 6px rgba(22, 58, 122, 0.45);
+  color: #6bb6ff;
+  -webkit-text-stroke: 0.3px rgba(212, 236, 255, 0.55);
+  text-shadow:
+    0 0 1px rgba(159, 210, 255, 0.7),
+    0 0 4px rgba(77, 159, 255, 0.35);
 }
 
 .cyber-preset-silverhand,
@@ -420,17 +423,39 @@ body.theme-cyberpunk {
   --cyber-bg: #05080b;
   --cyber-panel: #11130d;
   --cyber-banner: #fcee09;
-  --cyber-banner-text: #163a7a;
-  --cyber-banner-mark: #163a7a;
-  --cyber-accent: #163a7a;
+  --cyber-banner-text: #1f4f9a;
+  --cyber-banner-mark: #1f4f9a;
+  --cyber-accent: #6bb6ff;
   --cyber-line: #fcee09;
-  --cyber-hot: #163a7a;
-  --cyber-text: #163a7a;
-  --cyber-muted: #2c5a94;
-  --cyber-number: #163a7a;
-  --cyber-chat-name: #163a7a;
-  --cyber-chat-text: #163a7a;
+  --cyber-hot: #6bb6ff;
+  --cyber-text: #6bb6ff;
+  --cyber-muted: #8ec8ff;
+  --cyber-number: #6bb6ff;
+  --cyber-chat-name: #6bb6ff;
+  --cyber-chat-text: #6bb6ff;
   --cyber-chat-bg: #0a0c08;
+}
+
+.cyber-preset-silverhand .cyber-text,
+.cyber-preset-silverhand .cyber-muted,
+.cyber-preset-silverhand .cyber-accent-text,
+.cyber-preset-silverhand .cyber-line-text,
+.cyber-preset-silverhand .cyber-hot-text,
+.cyber-preset-silverhand .cyber-number,
+.cyber-preset-silverhand .cyber-chat-name,
+.cyber-preset-silverhand .cyber-chat-text,
+.cyber-preset-silverhand .cyber-rank-name,
+.cyber-preset-silverhand .cyber-rank-index,
+.cyber-preset-silverhand .cyber-input,
+.cyber-preset-silverhand .cyber-chat-input,
+.cyber-preset-silverhand .cyber-btn-accent,
+.cyber-preset-silverhand .cyber-btn-hot,
+.cyber-preset-silverhand .cyber-btn-line,
+.cyber-preset-silverhand .cyber-tile {
+  -webkit-text-stroke: 0.25px rgba(212, 236, 255, 0.45);
+  text-shadow:
+    0 0 1px rgba(159, 210, 255, 0.55),
+    0 0 4px rgba(77, 159, 255, 0.28);
 }
 
 .cyber-preset-silverhand .cyber-tile-2,
@@ -439,18 +464,26 @@ body.theme-cyberpunk {
 .cyber-preset-silverhand .cyber-tile-256 {
   background: #14160e;
   border-color: rgba(252, 238, 9, 0.45);
-  color: #163a7a;
+  color: #6bb6ff;
 }
 
 .cyber-preset-silverhand .cyber-tile-high {
   background: #fcee09;
   border-color: #fff56a;
-  color: #163a7a;
+  color: #1f4f9a;
 }
 
 .cyber-preset-silverhand .cyber-send {
-  background: #163a7a;
-  color: #fcee09;
+  background: #6bb6ff;
+  color: #05080b;
+}
+
+.cyber-preset-silverhand .cyber-code-symbol,
+.cyber-preset-silverhand .cyber-rare-word {
+  color: #6bb6ff !important;
+  text-shadow:
+    0 0 1px rgba(159, 210, 255, 0.5),
+    0 0 4px rgba(77, 159, 255, 0.25) !important;
 }
 
 .cyber-shell.cyber-preset-arasaka {
@@ -474,12 +507,15 @@ body.theme-cyberpunk {
 .cyber-shell.cyber-preset-silverhand .cyber-app-header {
   background: #07090d;
   border-color: rgba(252, 238, 9, 0.3);
-  color: #163a7a;
+  color: #6bb6ff;
+  text-shadow:
+    0 0 1px rgba(159, 210, 255, 0.5),
+    0 0 4px rgba(77, 159, 255, 0.25);
 }
 
 .cyber-shell.cyber-preset-silverhand .cyber-app-logo {
   background: #fcee09;
-  color: #163a7a;
+  color: #1f4f9a;
 }
 
 .cyber-mode-button-arasaka,
@@ -503,12 +539,15 @@ body.theme-cyberpunk {
 .cyber-mode-button-silverhand,
 .cyber-mode-button-silverhand:hover {
   background: #fcee09 !important;
-  color: #163a7a !important;
+  color: #1f4f9a !important;
   border-color: #fff56a !important;
 }
 
 .cyber-preset-menu-silverhand,
 .cyber-preset-menu-silverhand button {
-  color: #163a7a !important;
+  color: #6bb6ff !important;
   border-color: rgba(252, 238, 9, 0.5) !important;
+  text-shadow:
+    0 0 1px rgba(159, 210, 255, 0.5),
+    0 0 4px rgba(77, 159, 255, 0.25);
 }
