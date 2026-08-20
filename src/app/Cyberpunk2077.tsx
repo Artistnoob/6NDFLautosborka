@@ -453,24 +453,25 @@ export default function Cyberpunk2077({
   const wipeIdentity = async () => {
     const cleanNickname = nickname.trim().slice(0, 30)
     setWiping(true)
-    setScoreStatus('')
+    localStorage.removeItem('cyber-2048-best')
+    setBest(0)
+    resetGame()
+    setWipeOpen(false)
+    setWiping(false)
+
+    if (!supabase || !cleanNickname) {
+      setScoreStatus('Текущий результат и личный рекорд сброшены.')
+      return
+    }
+
     try {
-      if (supabase && cleanNickname) {
-        const { error } = await supabase.rpc('erase_cyberpunk_identity', {
-          player_nickname: cleanNickname,
-        })
-        if (error) throw error
-        await loadLeaderboards()
-      }
-      localStorage.removeItem('cyber-2048-best')
-      setBest(0)
-      resetGame()
-      setWipeOpen(false)
-      setScoreStatus('Текущий результат сброшен, запись удалена из таблиц рекордов.')
-    } catch (error) {
-      setScoreStatus(readableSupabaseError(error))
-    } finally {
-      setWiping(false)
+      const { error } = await supabase.rpc('erase_cyberpunk_identity', {
+        player_nickname: cleanNickname,
+      })
+      if (!error) await loadLeaderboards()
+      setScoreStatus('Текущий результат и личный рекорд сброшены.')
+    } catch {
+      setScoreStatus('Текущий результат и личный рекорд сброшены.')
     }
   }
 
@@ -796,9 +797,9 @@ export default function Cyberpunk2077({
 
       <button
         onClick={() => setWipeOpen(true)}
-        className="cyber-btn-hot absolute bottom-4 right-4 z-20 inline-flex items-center gap-2 border px-3 py-2 text-[10px] font-black tracking-widest"
+        className="cyber-btn-hot absolute bottom-4 left-4 z-20 inline-flex items-center gap-1 border px-1.5 py-0.5 text-[8px] font-black tracking-widest"
       >
-        <Eraser className="h-3.5 w-3.5" /> ОБНУЛИТЬСЯ
+        <Eraser className="h-2.5 w-2.5" /> ОБНУЛИТЬСЯ
       </button>
 
       {wipeOpen && (
