@@ -139,6 +139,32 @@ $$;
 revoke all on function public.submit_cyberpunk_score(text, integer) from public;
 grant execute on function public.submit_cyberpunk_score(text, integer) to anon, authenticated;
 
+create or replace function public.erase_cyberpunk_identity(
+  player_nickname text
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  clean_nickname text := btrim(player_nickname);
+begin
+  if char_length(clean_nickname) < 1 or char_length(clean_nickname) > 30 then
+    raise exception 'Nickname must contain from 1 to 30 characters';
+  end if;
+
+  delete from public.cyberpunk_scores
+  where lower(nickname) = lower(clean_nickname);
+
+  delete from public.cyberpunk_monthly_scores
+  where lower(nickname) = lower(clean_nickname);
+end;
+$$;
+
+revoke all on function public.erase_cyberpunk_identity(text) from public;
+grant execute on function public.erase_cyberpunk_identity(text) to anon, authenticated;
+
 do $$
 begin
   if not exists (

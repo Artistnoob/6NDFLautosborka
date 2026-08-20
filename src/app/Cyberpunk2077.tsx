@@ -6,7 +6,7 @@ import {
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import Image, { type StaticImageData } from 'next/image'
 import {
-  Crown, Gamepad2, ListOrdered, MessageSquare, RotateCcw, Send, Trophy, UserRound, X,
+  Crown, Eraser, Gamepad2, ListOrdered, MessageSquare, RotateCcw, Send, Trophy, UserRound, X,
 } from 'lucide-react'
 import cyberdemonRank from './cyberdemon-rank.png'
 import arasakaRank from './arasaka-rank.png'
@@ -232,6 +232,8 @@ export default function Cyberpunk2077({
   const [moveAnimation, setMoveAnimation] = useState<{ direction: Direction; sequence: number } | null>(null)
   const [endlessMode, setEndlessMode] = useState(false)
   const [endlessMilestoneDismissed, setEndlessMilestoneDismissed] = useState(false)
+  const [wipeOpen, setWipeOpen] = useState(false)
+  const [wiping, setWiping] = useState(false)
   const chatEndRef = useRef<HTMLDivElement>(null)
   const touchStartRef = useRef<{ x: number; y: number } | null>(null)
   const cheatClicksRef = useRef<number[]>([])
@@ -445,6 +447,30 @@ export default function Cyberpunk2077({
     } catch (error) {
       setConnectionState('error')
       setChatError(readableSupabaseError(error))
+    }
+  }
+
+  const wipeIdentity = async () => {
+    const cleanNickname = nickname.trim().slice(0, 30)
+    setWiping(true)
+    setScoreStatus('')
+    try {
+      if (supabase && cleanNickname) {
+        const { error } = await supabase.rpc('erase_cyberpunk_identity', {
+          player_nickname: cleanNickname,
+        })
+        if (error) throw error
+        await loadLeaderboards()
+      }
+      localStorage.removeItem('cyber-2048-best')
+      setBest(0)
+      resetGame()
+      setWipeOpen(false)
+      setScoreStatus('Текущий результат сброшен, запись удалена из таблиц рекордов.')
+    } catch (error) {
+      setScoreStatus(readableSupabaseError(error))
+    } finally {
+      setWiping(false)
     }
   }
 
@@ -767,6 +793,40 @@ export default function Cyberpunk2077({
           </form>
         </aside>
       </div>
+
+      <button
+        onClick={() => setWipeOpen(true)}
+        className="cyber-btn-hot absolute bottom-4 right-4 z-20 inline-flex items-center gap-2 border px-3 py-2 text-[10px] font-black tracking-widest"
+      >
+        <Eraser className="h-3.5 w-3.5" /> ОБНУЛИТЬСЯ
+      </button>
+
+      {wipeOpen && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm">
+          <section className="cyber-panel w-full max-w-md border p-5">
+            <div className="cyber-hot-text text-sm font-black tracking-widest">ПРЕДУПРЕЖДЕНИЕ</div>
+            <p className="cyber-text mt-3 text-sm leading-relaxed">
+              Это сбросит весь ваш текущий результат и сотрёт его из истории.
+            </p>
+            <div className="mt-5 flex flex-wrap justify-end gap-3">
+              <button
+                onClick={() => setWipeOpen(false)}
+                disabled={wiping}
+                className="cyber-btn-line border px-4 py-2 text-xs font-bold"
+              >
+                Нет
+              </button>
+              <button
+                onClick={() => void wipeIdentity()}
+                disabled={wiping}
+                className="cyber-btn-hot border px-4 py-2 text-xs font-black"
+              >
+                {wiping ? 'Сброс...' : 'Да, я уверен'}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   )
 }
