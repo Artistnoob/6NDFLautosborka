@@ -3,9 +3,9 @@ import xml2js from 'xml2js';
 import iconv from 'iconv-lite';
 import { updateReport } from '@/lib/xmlProcessor';
 import {
+  collectLatestNotifSums,
   extractPrevSumNalUderzhByKbk,
   extractReportMeta,
-  notificationMatchesReport,
   parseExcludedFields,
   previousPeriodReportMatches,
   type NotifRecord,
@@ -36,6 +36,7 @@ function getAttr(obj: any, tag: string, attr: string): string | undefined {
 function extractNotifRecords(notif: any): NotifRecord[] {
   const records: NotifRecord[] = [];
   const inn = getAttr(notif, 'НПЮЛ', 'ИННЮЛ') || getAttr(notif, 'СвНП', 'ИННФЛ') || '';
+  const docDate = getAttr(notif, 'Документ', 'ДатаДок') || '';
 
   const uvItems = findAll(notif, 'УвИсчСумНалог');
   for (const u of uvItems) {
@@ -49,6 +50,7 @@ function extractNotifRecords(notif: any): NotifRecord[] {
       kbk: (a.КБК || '').trim(),
       slot: (a.НомерМесКварт || '').trim(),
       sum: parseInt(a.СумНалогАванс || '0', 10),
+      docDate,
     });
   }
   return records;
@@ -128,18 +130,7 @@ export async function POST(req: NextRequest) {
         const parsed = await parseXmlFile(reportFile);
         const reportMeta = extractReportMeta(parsed);
 
-        const fromNotif: Record<string, Record<string, number>> = {};
-
-        for (const rec of allNotifRecords) {
-          if (
-            notificationMatchesReport(rec, reportMeta, excluded) &&
-            rec.kbk &&
-            rec.slot
-          ) {
-            if (!fromNotif[rec.kbk]) fromNotif[rec.kbk] = {};
-            fromNotif[rec.kbk][rec.slot] = (fromNotif[rec.kbk][rec.slot] ?? 0) + rec.sum;
-          }
-        }
+        const fromNotif = collectLatestNotifSums(allNotifRecords, reportMeta, excluded);
 
         const hasPrevPeriod = prevReports.length > 0;
         const prevSumNalUderzhByKbk = hasPrevPeriod

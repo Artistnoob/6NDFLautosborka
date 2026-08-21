@@ -3,7 +3,7 @@ import {
   SLOT_TO_SEC2,
 } from '@/lib/xmlProcessor';
 import {
-  notificationMatchesReport,
+  collectLatestNotifSums,
   previousPeriodReportMatches,
   type MatchField,
   type NotifRecord,
@@ -509,15 +509,7 @@ function buildFromNotif(
   allNotifRecords: NotifRecord[],
   excluded: Set<MatchField>,
 ): Record<string, Record<string, number>> {
-  const fromNotif: Record<string, Record<string, number>> = {};
-
-  for (const rec of allNotifRecords) {
-    if (!notificationMatchesReport(rec, reportMeta, excluded) || !rec.kbk || !rec.slot) continue;
-    if (!fromNotif[rec.kbk]) fromNotif[rec.kbk] = {};
-    fromNotif[rec.kbk][rec.slot] = (fromNotif[rec.kbk][rec.slot] ?? 0) + rec.sum;
-  }
-
-  return fromNotif;
+  return collectLatestNotifSums(allNotifRecords, reportMeta, excluded);
 }
 
 function collectPrevSumForReport(

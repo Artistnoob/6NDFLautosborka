@@ -138,6 +138,7 @@ export interface NotifRecord {
   kbk: string;
   slot: string;
   sum: number;
+  docDate: string;
 }
 
 export function notificationMatchesReport(
@@ -153,4 +154,46 @@ export function notificationMatchesReport(
     year: rec.year,
   };
   return reportsMatch(recMeta, report, excluded);
+}
+
+/** ДатаДок уведомления в миллисекундах. Пустая дата считается самой ранней. */
+export function notificationDocDateValue(date: string): number {
+  const trimmed = date.trim();
+  const dotted = trimmed.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+  if (dotted) {
+    return Date.UTC(Number(dotted[3]), Number(dotted[2]) - 1, Number(dotted[1]));
+  }
+  const parsed = Date.parse(trimmed);
+  return Number.isNaN(parsed) ? Number.NEGATIVE_INFINITY : parsed;
+}
+
+/**
+ * Суммы уведомлений по КБК и сроку (НомерМесКварт).
+ * Если на один срок несколько уведомлений, берётся сумма из уведомления
+ * с самой поздней ДатаДок.
+ */
+export function collectLatestNotifSums(
+  records: NotifRecord[],
+  report: ReportMeta,
+  excluded: Set<MatchField>,
+): Record<string, Record<string, number>> {
+  const fromNotif: Record<string, Record<string, number>> = {};
+  const latestDate: Record<string, Record<string, number>> = {};
+
+  for (const rec of records) {
+    if (!notificationMatchesReport(rec, report, excluded) || !rec.kbk || !rec.slot) {
+      continue;
+    }
+
+    const recTime = notificationDocDateValue(rec.docDate);
+    const previousTime = latestDate[rec.kbk]?.[rec.slot];
+    if (previousTime !== undefined && recTime < previousTime) continue;
+
+    if (!fromNotif[rec.kbk]) fromNotif[rec.kbk] = {};
+    if (!latestDate[rec.kbk]) latestDate[rec.kbk] = {};
+    fromNotif[rec.kbk][rec.slot] = rec.sum;
+    latestDate[rec.kbk][rec.slot] = recTime;
+  }
+
+  return fromNotif;
 }
