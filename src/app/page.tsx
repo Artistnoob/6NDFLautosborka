@@ -892,7 +892,7 @@ export default function Home() {
               ? 'border-[#fcee09]/25 bg-[#07090d]'
               : 'border-border bg-surface'
       }`}>
-        <div className={`${isReconciliation || isCyberpunk ? 'max-w-7xl' : 'max-w-3xl'} mx-auto px-6 py-4 flex flex-col gap-4`}>
+        <div className={`${isReconciliation ? 'max-w-7xl' : isCyberpunk ? 'max-w-[92rem]' : 'max-w-3xl'} mx-auto px-6 py-4 flex flex-col gap-4`}>
           <div className="flex items-center gap-3">
             <div className={`cyber-app-logo w-9 h-9 rounded-xl flex items-center justify-center font-mono text-sm font-medium flex-shrink-0 ${
               isAnnual
@@ -912,7 +912,7 @@ export default function Home() {
         </div>
       </header>
 
-      <main className={`${isReconciliation || isCyberpunk ? 'max-w-7xl' : 'max-w-3xl lg:pl-60'} mx-auto px-6 py-12 transition-colors duration-500`}>
+      <main className={`${isReconciliation ? 'max-w-7xl' : isCyberpunk ? 'max-w-[92rem]' : 'max-w-3xl lg:pl-60'} mx-auto px-6 py-12 transition-colors duration-500`}>
         {mode === 'quarterly' && (
           <div className="lg:hidden mb-6 bg-surface border border-border rounded-xl p-4">
             <div className="text-xs font-semibold text-[#e8e9f0] mb-3">Исключить для заполнения</div>

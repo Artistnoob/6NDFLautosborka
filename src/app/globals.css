@@ -551,3 +551,117 @@ body.theme-cyberpunk {
     0 0 1px rgba(159, 210, 255, 0.5),
     0 0 4px rgba(77, 159, 255, 0.25);
 }
+
+.cyber-game-nav {
+  border-color: color-mix(in srgb, var(--cyber-accent) 35%, transparent);
+  background: color-mix(in srgb, var(--cyber-bg) 88%, black);
+}
+
+.cyber-game-switch {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 92px;
+  padding: 10px 8px;
+  border: 1px solid color-mix(in srgb, var(--cyber-line) 30%, transparent);
+  color: var(--cyber-muted);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  line-height: 1.15;
+  text-align: center;
+  clip-path: polygon(0 8px, 8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%);
+}
+
+.cyber-game-switch.is-active {
+  background: color-mix(in srgb, var(--cyber-accent) 16%, transparent);
+  border-color: var(--cyber-accent);
+  color: var(--cyber-accent);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--cyber-accent) 22%, transparent);
+}
+
+.cyber-slots {
+  background: color-mix(in srgb, var(--cyber-bg) 88%, black);
+  border-color: color-mix(in srgb, var(--cyber-accent) 45%, transparent);
+  box-shadow:
+    inset 0 0 40px color-mix(in srgb, var(--cyber-hot) 10%, transparent),
+    0 0 24px color-mix(in srgb, var(--cyber-accent) 12%, transparent);
+  clip-path: polygon(0 16px, 16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%);
+}
+
+.cyber-slots.is-win {
+  box-shadow: 0 0 28px color-mix(in srgb, var(--cyber-accent) 35%, transparent);
+}
+
+.cyber-slots.is-jackpot {
+  box-shadow: 0 0 40px color-mix(in srgb, var(--cyber-hot) 45%, transparent);
+}
+
+.cyber-slots-window {
+  border-color: color-mix(in srgb, var(--cyber-line) 40%, transparent);
+  background: #05070a;
+}
+
+.cyber-reel {
+  height: 336px;
+  background: #000;
+}
+
+.cyber-reel-strip.is-armed {
+  transition-property: transform;
+  transition-timing-function: cubic-bezier(0.12, 0.72, 0.16, 1);
+}
+
+.cyber-reel-cell {
+  border-color: color-mix(in srgb, var(--cyber-line) 25%, transparent);
+}
+
+.cyber-reel-name {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: 3px 4px 4px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.88));
+  color: var(--cyber-accent);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-align: center;
+}
+
+.cyber-payline {
+  top: 112px;
+  height: 112px;
+  border-top: 2px solid var(--cyber-accent);
+  border-bottom: 2px solid var(--cyber-accent);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--cyber-accent) 35%, transparent);
+}
+
+.cyber-slots-light {
+  height: 8px;
+  flex: 1;
+  background: var(--cyber-hot);
+  opacity: 0.35;
+  animation: cyber-slot-blink 1.2s linear infinite;
+}
+
+.cyber-slots.is-win .cyber-slots-light,
+.cyber-slots.is-jackpot .cyber-slots-light {
+  animation-duration: 0.35s;
+  opacity: 1;
+}
+
+@keyframes cyber-slot-blink {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 1; }
+}
+
+.cyber-slots-spin {
+  background: var(--cyber-accent);
+  color: var(--cyber-banner-text);
+  clip-path: polygon(0 8px, 8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%);
+}

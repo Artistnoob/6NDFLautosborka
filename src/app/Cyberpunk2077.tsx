@@ -6,11 +6,14 @@ import {
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import Image, { type StaticImageData } from 'next/image'
 import {
-  Crown, Eraser, Gamepad2, ListOrdered, MessageSquare, RotateCcw, Send, Trophy, UserRound, X,
+  Coins, Crown, Eraser, Gamepad2, ListOrdered, MessageSquare, RotateCcw, Send, Trophy, UserRound, X,
 } from 'lucide-react'
 import cyberdemonRank from './cyberdemon-rank.png'
 import arasakaRank from './arasaka-rank.png'
 import yellowRuneRank from './yellow-rune-rank.png'
+import NightCitySlots from './NightCitySlots'
+
+type ArcadeGame = '2048' | 'slots'
 
 type Direction = 'left' | 'right' | 'up' | 'down'
 
@@ -234,6 +237,8 @@ export default function Cyberpunk2077({
   const [endlessMilestoneDismissed, setEndlessMilestoneDismissed] = useState(false)
   const [wipeOpen, setWipeOpen] = useState(false)
   const [wiping, setWiping] = useState(false)
+  const [activeGame, setActiveGame] = useState<ArcadeGame>('2048')
+  const [slotsReady, setSlotsReady] = useState(false)
   const chatEndRef = useRef<HTMLDivElement>(null)
   const touchStartRef = useRef<{ x: number; y: number } | null>(null)
   const cheatClicksRef = useRef<number[]>([])
@@ -350,6 +355,7 @@ export default function Cyberpunk2077({
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement
       if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return
+      if (activeGame !== '2048') return
       const directions: Record<string, Direction | undefined> = {
         ArrowLeft: 'left', a: 'left', A: 'left',
         ArrowRight: 'right', d: 'right', D: 'right',
@@ -363,7 +369,7 @@ export default function Cyberpunk2077({
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [move])
+  }, [activeGame, move])
 
   useEffect(() => {
     if (!supabase) {
@@ -521,7 +527,29 @@ export default function Cyberpunk2077({
     leaderboardView === 'monthly' ? 'МЕСЯЦ СЛАВЫ' : 'ЛЕГЕНДЫ НАЙТ-СИТИ'
 
   return (
-    <div className={`cyber-game cyber-preset-${preset} relative min-h-[calc(100vh-190px)] overflow-hidden rounded-2xl`}>
+    <div className={`cyber-game cyber-preset-${preset} relative flex min-h-[calc(100vh-190px)] flex-col overflow-hidden rounded-2xl xl:flex-row`}>
+      <nav className="cyber-game-nav relative z-10 flex shrink-0 gap-2 border-b p-3 xl:w-[108px] xl:flex-col xl:border-b-0 xl:border-r xl:p-3">
+        <button
+          type="button"
+          onClick={() => setActiveGame('2048')}
+          className={`cyber-game-switch ${activeGame === '2048' ? 'is-active' : ''}`}
+        >
+          <Gamepad2 className="h-5 w-5" />
+          <span>2048</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setSlotsReady(true)
+            setActiveGame('slots')
+          }}
+          className={`cyber-game-switch ${activeGame === 'slots' ? 'is-active' : ''}`}
+        >
+          <Coins className="h-5 w-5" />
+          <span>NIGHT CITY SLOTS</span>
+        </button>
+      </nav>
+      <div className="relative min-w-0 flex-1">
       <div className="pointer-events-none absolute inset-0 opacity-20"
         style={{
           backgroundImage: 'linear-gradient(rgba(0,240,255,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(0,240,255,.08) 1px, transparent 1px)',
@@ -549,7 +577,9 @@ export default function Cyberpunk2077({
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <div className="text-xs font-black tracking-[.45em]">NIGHT CITY // SUBNET</div>
-            <h1 className="text-4xl font-black italic tracking-tight">2048 <span className="cyber-banner-mark">2077</span></h1>
+            <h1 className="text-4xl font-black italic tracking-tight">
+              {activeGame === 'slots' ? 'SLOTS' : '2048'} <span className="cyber-banner-mark">2077</span>
+            </h1>
           </div>
           <div className="font-mono text-xs">
             CONNECTION: {{
@@ -629,122 +659,140 @@ export default function Cyberpunk2077({
             />
           </section>
 
-          <section className="cyber-stat-panel border-l-4 p-4">
-            <div className="cyber-hot-text flex items-center gap-2 text-xs font-bold tracking-widest">
-              <Trophy className="w-4 h-4" /> СТАТИСТИКА
-            </div>
-            <div className="mt-4 grid grid-cols-2 gap-3 font-mono">
-              <div><div className="cyber-muted text-[10px]">СЧЁТ</div><div className="cyber-number text-xl">{score}</div></div>
-              <div><div className="cyber-muted text-[10px]">РЕКОРД</div><div className="cyber-number text-xl">{best}</div></div>
-            </div>
-          </section>
+          {activeGame === '2048' && (
+            <>
+              <section className="cyber-stat-panel border-l-4 p-4">
+                <div className="cyber-hot-text flex items-center gap-2 text-xs font-bold tracking-widest">
+                  <Trophy className="w-4 h-4" /> СТАТИСТИКА
+                </div>
+                <div className="mt-4 grid grid-cols-2 gap-3 font-mono">
+                  <div><div className="cyber-muted text-[10px]">СЧЁТ</div><div className="cyber-number text-xl">{score}</div></div>
+                  <div><div className="cyber-muted text-[10px]">РЕКОРД</div><div className="cyber-number text-xl">{best}</div></div>
+                </div>
+              </section>
 
-          <section className="cyber-help border p-4 text-xs">
-            <div className="cyber-text mb-2 font-bold">УПРАВЛЕНИЕ</div>
-            Стрелки или WASD. На телефоне управляйте свайпами по игровому полю.
-            Соединяйте одинаковые нейрочипы и доберитесь до 2048.
-          </section>
+              <section className="cyber-help border p-4 text-xs">
+                <div className="cyber-text mb-2 font-bold">УПРАВЛЕНИЕ</div>
+                Стрелки или WASD. На телефоне управляйте свайпами по игровому полю.
+                Соединяйте одинаковые нейрочипы и доберитесь до 2048.
+              </section>
 
-          <div className="grid grid-cols-1 gap-2">
-            <button
-              onClick={() => void becomeLegend()}
-              className="cyber-btn-accent inline-flex items-center justify-center gap-2 border px-3 py-2.5 text-xs font-black"
-            >
-              <Crown className="h-4 w-4" /> СТАТЬ ЛЕГЕНДОЙ
-            </button>
-            <button
-              onClick={() => {
-                setLeaderboardView('monthly')
-                setLeaderboardOpen(true)
-                void loadLeaderboards()
-              }}
-              className="cyber-btn-hot inline-flex items-center justify-center gap-2 border px-3 py-2.5 text-xs font-bold"
-            >
-              <ListOrdered className="h-4 w-4" /> МЕСЯЦ СЛАВЫ
-            </button>
-            <button
-              onClick={() => {
-                setLeaderboardView('all-time')
-                setLeaderboardOpen(true)
-                void loadLeaderboards()
-              }}
-              className="cyber-legends-button cyber-btn-line inline-flex items-center justify-center gap-2 border px-3 py-2.5 text-xs font-black"
-            >
-              <Crown className="h-4 w-4" /> ЛЕГЕНДЫ НАЙТ-СИТИ
-            </button>
-            {scoreStatus && !leaderboardOpen && (
-              <div className="cyber-hot-text text-[10px] leading-relaxed">{scoreStatus}</div>
-            )}
-          </div>
+              <div className="grid grid-cols-1 gap-2">
+                <button
+                  onClick={() => void becomeLegend()}
+                  className="cyber-btn-accent inline-flex items-center justify-center gap-2 border px-3 py-2.5 text-xs font-black"
+                >
+                  <Crown className="h-4 w-4" /> СТАТЬ ЛЕГЕНДОЙ
+                </button>
+                <button
+                  onClick={() => {
+                    setLeaderboardView('monthly')
+                    setLeaderboardOpen(true)
+                    void loadLeaderboards()
+                  }}
+                  className="cyber-btn-hot inline-flex items-center justify-center gap-2 border px-3 py-2.5 text-xs font-bold"
+                >
+                  <ListOrdered className="h-4 w-4" /> МЕСЯЦ СЛАВЫ
+                </button>
+                <button
+                  onClick={() => {
+                    setLeaderboardView('all-time')
+                    setLeaderboardOpen(true)
+                    void loadLeaderboards()
+                  }}
+                  className="cyber-legends-button cyber-btn-line inline-flex items-center justify-center gap-2 border px-3 py-2.5 text-xs font-black"
+                >
+                  <Crown className="h-4 w-4" /> ЛЕГЕНДЫ НАЙТ-СИТИ
+                </button>
+                {scoreStatus && !leaderboardOpen && (
+                  <div className="cyber-hot-text text-[10px] leading-relaxed">{scoreStatus}</div>
+                )}
+              </div>
+            </>
+          )}
+          {activeGame === 'slots' && (
+            <section className="cyber-help border p-4 text-xs">
+              <div className="cyber-text mb-2 font-bold">AFTERLIFE</div>
+              Три барабана Найт-Сити. Соберите трёх одинаковых персонажей или пару на линии выплаты.
+              Чат справа остаётся общим для всей подсети.
+            </section>
+          )}
         </aside>
 
         <main className="flex flex-col items-center">
-          <div className="mb-4 flex w-full max-w-[560px] items-center justify-between">
-            <div className="cyber-accent-text flex items-center gap-2">
-              <Gamepad2 className="w-5 h-5" />
-              <span className="font-bold tracking-widest">BREACH PROTOCOL</span>
-              <span className="cyber-muted border-l pl-2 font-mono text-[10px]">
-                ЦЕЛЬ: {(endlessMode ? ENDLESS_TARGET : STANDARD_TARGET).toLocaleString('ru-RU')}
-              </span>
-            </div>
-            <button onClick={resetGameFromButton}
-              className="cyber-btn-accent inline-flex items-center gap-2 border px-3 py-2 text-xs font-bold">
-              <RotateCcw className="w-4 h-4" /> НОВАЯ ИГРА
-            </button>
-          </div>
-
-          <div
-            className="cyber-board relative grid aspect-square w-full max-w-[560px] touch-none select-none grid-cols-4 gap-3 border-2 p-3"
-            onTouchStart={startBoardSwipe}
-            onTouchEnd={finishBoardSwipe}
-            onTouchCancel={() => { touchStartRef.current = null }}
-          >
-            {grid.map((value, index) => (
-              <div
-                key={`${index}-${moveAnimation?.sequence ?? 0}`}
-                className={`${tileStyle(value)} flex items-center justify-center border font-black font-mono transition-all duration-100 ${
-                  moveAnimation ? `cyber-tile-move-${moveAnimation.direction}` : ''
-                } ${tileTextSize(value)}`}
-              >
-                {value || 0}
-              </div>
-            ))}
-            {(gameOver || standardWon || endlessMilestoneReached) && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/85 backdrop-blur-sm">
-                <div className="cyber-accent-text px-4 text-center text-3xl font-black">
-                  {endlessMilestoneReached
-                    ? 'NIGHT CITY LEGEND'
-                    : standardWon
-                      ? 'RELIC ACTIVATED'
-                      : 'SYSTEM FAILURE'}
+          <div className={activeGame === '2048' ? 'flex w-full flex-col items-center' : 'hidden'}>
+              <div className="mb-4 flex w-full max-w-[560px] items-center justify-between">
+                <div className="cyber-accent-text flex items-center gap-2">
+                  <Gamepad2 className="w-5 h-5" />
+                  <span className="font-bold tracking-widest">BREACH PROTOCOL</span>
+                  <span className="cyber-muted border-l pl-2 font-mono text-[10px]">
+                    ЦЕЛЬ: {(endlessMode ? ENDLESS_TARGET : STANDARD_TARGET).toLocaleString('ru-RU')}
+                  </span>
                 </div>
-                {endlessMilestoneReached && (
-                  <div className="cyber-number mt-2 font-mono text-xs">
-                    ПЛИТКА {ENDLESS_TARGET.toLocaleString('ru-RU')} СОБРАНА
+                <button onClick={resetGameFromButton}
+                  className="cyber-btn-accent inline-flex items-center gap-2 border px-3 py-2 text-xs font-bold">
+                  <RotateCcw className="w-4 h-4" /> НОВАЯ ИГРА
+                </button>
+              </div>
+
+              <div
+                className="cyber-board relative grid aspect-square w-full max-w-[560px] touch-none select-none grid-cols-4 gap-3 border-2 p-3"
+                onTouchStart={startBoardSwipe}
+                onTouchEnd={finishBoardSwipe}
+                onTouchCancel={() => { touchStartRef.current = null }}
+              >
+                {grid.map((value, index) => (
+                  <div
+                    key={`${index}-${moveAnimation?.sequence ?? 0}`}
+                    className={`${tileStyle(value)} flex items-center justify-center border font-black font-mono transition-all duration-100 ${
+                      moveAnimation ? `cyber-tile-move-${moveAnimation.direction}` : ''
+                    } ${tileTextSize(value)}`}
+                  >
+                    {value || 0}
+                  </div>
+                ))}
+                {(gameOver || standardWon || endlessMilestoneReached) && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/85 backdrop-blur-sm">
+                    <div className="cyber-accent-text px-4 text-center text-3xl font-black">
+                      {endlessMilestoneReached
+                        ? 'NIGHT CITY LEGEND'
+                        : standardWon
+                          ? 'RELIC ACTIVATED'
+                          : 'SYSTEM FAILURE'}
+                    </div>
+                    {endlessMilestoneReached && (
+                      <div className="cyber-number mt-2 font-mono text-xs">
+                        ПЛИТКА {ENDLESS_TARGET.toLocaleString('ru-RU')} СОБРАНА
+                      </div>
+                    )}
+                    <div className="mt-4 flex flex-wrap justify-center gap-3">
+                      <button onClick={resetGameFromButton} className="cyber-banner px-5 py-2 font-bold">
+                        ПЕРЕЗАПУСК
+                      </button>
+                      {standardWon && (
+                        <button
+                          onClick={() => setEndlessMode(true)}
+                          className="cyber-btn-line border px-5 py-2 font-bold"
+                        >
+                          БЕСКОНЕЧНЫЙ РЕЖИМ
+                        </button>
+                      )}
+                      {endlessMilestoneReached && (
+                        <button
+                          onClick={() => setEndlessMilestoneDismissed(true)}
+                          className="cyber-btn-hot border px-5 py-2 font-bold"
+                        >
+                          ПРОДОЛЖИТЬ
+                        </button>
+                      )}
+                    </div>
                   </div>
                 )}
-                <div className="mt-4 flex flex-wrap justify-center gap-3">
-                  <button onClick={resetGameFromButton} className="cyber-banner px-5 py-2 font-bold">
-                    ПЕРЕЗАПУСК
-                  </button>
-                  {standardWon && (
-                    <button
-                      onClick={() => setEndlessMode(true)}
-                      className="cyber-btn-line border px-5 py-2 font-bold"
-                    >
-                      БЕСКОНЕЧНЫЙ РЕЖИМ
-                    </button>
-                  )}
-                  {endlessMilestoneReached && (
-                    <button
-                      onClick={() => setEndlessMilestoneDismissed(true)}
-                      className="cyber-btn-hot border px-5 py-2 font-bold"
-                    >
-                      ПРОДОЛЖИТЬ
-                    </button>
-                  )}
-                </div>
               </div>
+          </div>
+          <div className={activeGame === 'slots' ? 'flex w-full flex-col items-center' : 'hidden'}>
+            {(activeGame === 'slots' || slotsReady) && (
+              <NightCitySlots active={activeGame === 'slots'} />
             )}
           </div>
         </main>
@@ -801,6 +849,7 @@ export default function Cyberpunk2077({
       >
         <Eraser className="h-2.5 w-2.5" /> ОБНУЛИТЬСЯ
       </button>
+      </div>
 
       {wipeOpen && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm">
