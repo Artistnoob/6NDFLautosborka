@@ -1,9 +1,8 @@
 'use client'
 
 import {
-  FormEvent, type TouchEvent, useCallback, useEffect, useMemo, useRef, useState,
+  FormEvent, type TouchEvent, useCallback, useEffect, useRef, useState,
 } from 'react'
-import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import Image, { type StaticImageData } from 'next/image'
 import {
   Coins, Crown, Eraser, Gamepad2, ListOrdered, MessageSquare, RotateCcw, Send, Trophy, UserRound, X,
@@ -44,10 +43,24 @@ const HACK_SYMBOLS = [
   '1C E9', 'V', '1100', 'PING', 'BD', 'PROXY', '0x77', 'UPLOAD',
 ]
 
-function readableSupabaseError(error: unknown): string {
+async function apiJson<T>(url: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(url, init)
+  let body: { error?: string } = {}
+  try {
+    body = await res.json()
+  } catch {
+    body = {}
+  }
+  if (!res.ok) {
+    throw new Error(body.error || `HTTP ${res.status}`)
+  }
+  return body as T
+}
+
+function readableNetworkError(error: unknown): string {
   const message = error instanceof Error ? error.message : String(error)
   if (/failed to fetch|networkerror|load failed/i.test(message)) {
-    return 'Нет связи с Supabase. Проверьте Project URL, anon key и доступность проекта.'
+    return 'Нет связи с сервером. Обновите страницу и попробуйте снова.'
   }
   return message
 }
@@ -226,7 +239,7 @@ export default function Cyberpunk2077({
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [message, setMessage] = useState('')
   const [chatError, setChatError] = useState('')
-  const [connectionState, setConnectionState] = useState<'offline' | 'connecting' | 'online' | 'error'>('offline')
+  const [connectionState, setConnectionState] = useState<'offline' | 'connecting' | 'online' | 'error'>('connecting')
   const [allTimeLeaderboard, setAllTimeLeaderboard] = useState<LeaderboardEntry[]>([])
   const [monthlyLeaderboard, setMonthlyLeaderboard] = useState<LeaderboardEntry[]>([])
   const [leaderboardView, setLeaderboardView] = useState<LeaderboardView>('all-time')
@@ -246,41 +259,20 @@ export default function Cyberpunk2077({
   const cheatClicksRef = useRef<number[]>([])
   const cheatActiveRef = useRef(false)
 
-  const supabase = useMemo<SupabaseClient | null>(() => {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    return url && key ? createClient(url, key) : null
-  }, [])
-
   const loadLeaderboards = useCallback(async () => {
-    if (!supabase) return
     try {
-      const currentMonth = `${new Date().toISOString().slice(0, 7)}-01`
-      const [allTimeResult, monthlyResult] = await Promise.all([
-        supabase
-          .from('cyberpunk_scores')
-          .select('*')
-          .order('score', { ascending: false })
-          .limit(20),
-        supabase
-          .from('cyberpunk_monthly_scores')
-          .select('*')
-          .eq('score_month', currentMonth)
-          .order('score', { ascending: false })
-          .limit(20),
-      ])
-      if (allTimeResult.error) throw allTimeResult.error
-      setAllTimeLeaderboard((allTimeResult.data ?? []) as LeaderboardEntry[])
-      if (monthlyResult.error) {
-        setMonthlyLeaderboard([])
-        setScoreStatus(readableSupabaseError(monthlyResult.error))
-        return
-      }
-      setMonthlyLeaderboard((monthlyResult.data ?? []) as LeaderboardEntry[])
+      const data = await apiJson<{
+        allTime: LeaderboardEntry[]
+        monthly: LeaderboardEntry[]
+        monthlyError: string | null
+      }>('/api/cyberpunk/scores')
+      setAllTimeLeaderboard(data.allTime)
+      setMonthlyLeaderboard(data.monthly)
+      if (data.monthlyError) setScoreStatus(data.monthlyError)
     } catch (error) {
-      setScoreStatus(readableSupabaseError(error))
+      setScoreStatus(readableNetworkError(error))
     }
-  }, [supabase])
+  }, [])
 
   const resetGame = useCallback(() => {
     setGrid(newGrid())
@@ -376,67 +368,43 @@ export default function Cyberpunk2077({
   }, [activeGame, move])
 
   useEffect(() => {
-    if (!supabase) {
-      setChatError('Добавьте NEXT_PUBLIC_SUPABASE_URL и NEXT_PUBLIC_SUPABASE_ANON_KEY.')
-      setConnectionState('offline')
-      return
-    }
-    setConnectionState('connecting')
     let active = true
-    void (async () => {
+    setConnectionState('connecting')
+
+    const loadMessages = async () => {
       try {
-        const { data, error } = await supabase
-          .from('cyberpunk_messages')
-          .select('*')
-          .order('created_at', { ascending: true })
-          .limit(100)
+        const data = await apiJson<{ messages: ChatMessage[] }>('/api/cyberpunk/messages')
         if (!active) return
-        if (error) throw error
-        setMessages((data ?? []) as ChatMessage[])
+        setMessages(current => {
+          const next = data.messages
+          if (
+            current.length === next.length &&
+            current.every((item, index) => item.id === next[index]?.id)
+          ) {
+            return current
+          }
+          return next
+        })
         setChatError('')
+        setConnectionState('online')
       } catch (error) {
         if (!active) return
         setConnectionState('error')
-        setChatError(readableSupabaseError(error))
+        setChatError(readableNetworkError(error))
       }
-    })()
-    void loadLeaderboards()
+    }
 
-    const channel = supabase
-      .channel('cyberpunk-2077-chat')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'cyberpunk_messages' },
-        payload => {
-          const incoming = payload.new as ChatMessage
-          setMessages(current =>
-            current.some(item => item.id === incoming.id)
-              ? current
-              : [...current.slice(-99), incoming],
-          )
-        },
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'cyberpunk_scores' },
-        () => void loadLeaderboards(),
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'cyberpunk_monthly_scores' },
-        () => void loadLeaderboards(),
-      )
-      .subscribe(status => {
-        if (!active) return
-        if (status === 'SUBSCRIBED') setConnectionState('online')
-        else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') setConnectionState('error')
-      })
+    void loadMessages()
+    void loadLeaderboards()
+    const messagesTimer = window.setInterval(() => void loadMessages(), 3000)
+    const scoresTimer = window.setInterval(() => void loadLeaderboards(), 10000)
 
     return () => {
       active = false
-      void supabase.removeChannel(channel)
+      window.clearInterval(messagesTimer)
+      window.clearInterval(scoresTimer)
     }
-  }, [loadLeaderboards, supabase])
+  }, [loadLeaderboards])
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -446,17 +414,24 @@ export default function Cyberpunk2077({
     event.preventDefault()
     const cleanNickname = nickname.trim().slice(0, 30)
     const cleanMessage = message.trim().slice(0, 500)
-    if (!supabase || !cleanNickname || !cleanMessage) return
+    if (!cleanNickname || !cleanMessage) return
     setChatError('')
     try {
-      const { error } = await supabase
-        .from('cyberpunk_messages')
-        .insert({ nickname: cleanNickname, message: cleanMessage })
-      if (error) throw error
+      const data = await apiJson<{ message: ChatMessage }>('/api/cyberpunk/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nickname: cleanNickname, message: cleanMessage }),
+      })
       setMessage('')
+      setConnectionState('online')
+      setMessages(current =>
+        current.some(item => item.id === data.message.id)
+          ? current
+          : [...current.slice(-99), data.message],
+      )
     } catch (error) {
       setConnectionState('error')
-      setChatError(readableSupabaseError(error))
+      setChatError(readableNetworkError(error))
     }
   }
 
@@ -469,16 +444,18 @@ export default function Cyberpunk2077({
     setWipeOpen(false)
     setWiping(false)
 
-    if (!supabase || !cleanNickname) {
+    if (!cleanNickname) {
       setScoreStatus('Текущий результат и личный рекорд сброшены.')
       return
     }
 
     try {
-      const { error } = await supabase.rpc('erase_cyberpunk_identity', {
-        player_nickname: cleanNickname,
+      await apiJson('/api/cyberpunk/identity', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nickname: cleanNickname }),
       })
-      if (!error) await loadLeaderboards()
+      await loadLeaderboards()
       setScoreStatus('Текущий результат и личный рекорд сброшены.')
     } catch {
       setScoreStatus('Текущий результат и личный рекорд сброшены.')
@@ -487,10 +464,6 @@ export default function Cyberpunk2077({
 
   const becomeLegend = async () => {
     const cleanNickname = nickname.trim().slice(0, 30)
-    if (!supabase) {
-      setScoreStatus('Нет подключения к Supabase.')
-      return
-    }
     if (!cleanNickname) {
       setScoreStatus('Сначала введите никнейм.')
       return
@@ -501,21 +474,21 @@ export default function Cyberpunk2077({
     }
     setScoreStatus('Передача результата...')
     try {
-      const { data, error } = await supabase.rpc('submit_cyberpunk_score', {
-        player_nickname: cleanNickname,
-        player_score: score,
+      const data = await apiJson<{ rank: number | null }>('/api/cyberpunk/scores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nickname: cleanNickname, score }),
       })
-      if (error) throw error
       await loadLeaderboards()
       setLeaderboardView('all-time')
       setLeaderboardOpen(true)
       setScoreStatus(
-        typeof data === 'number'
-          ? `Результат принят. Место в рейтинге: ${data}.`
+        typeof data.rank === 'number'
+          ? `Результат принят. Место в рейтинге: ${data.rank}.`
           : 'Результат принят, но пока не входит в двадцатку.',
       )
     } catch (error) {
-      setScoreStatus(readableSupabaseError(error))
+      setScoreStatus(readableNetworkError(error))
     }
   }
 
@@ -839,13 +812,11 @@ export default function Cyberpunk2077({
           <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
             {messages.length === 0 && (
               <div className="cyber-muted mt-8 text-center text-xs">
-                {!supabase
-                  ? 'Чат ожидает подключения Supabase.'
-                  : connectionState === 'connecting'
-                    ? 'Подключение к сети Найт-Сити...'
-                    : connectionState === 'error'
-                      ? (chatError || 'Нет связи с чатом.')
-                      : 'Канал пуст. Оставьте первое сообщение.'}
+                {connectionState === 'connecting'
+                  ? 'Подключение к сети Найт-Сити...'
+                  : connectionState === 'error'
+                    ? (chatError || 'Нет связи с чатом.')
+                    : 'Канал пуст. Оставьте первое сообщение.'}
               </div>
             )}
             {messages.map(item => (
@@ -869,12 +840,11 @@ export default function Cyberpunk2077({
                 onChange={event => setMessage(event.target.value)}
                 maxLength={500}
                 placeholder="Сообщение в сеть..."
-                disabled={!supabase}
                 className="cyber-chat-input min-w-0 flex-1 border bg-black/60 px-3 py-2 text-xs outline-none"
               />
               <button
                 type="submit"
-                disabled={!supabase || !nickname.trim() || !message.trim()}
+                disabled={!nickname.trim() || !message.trim()}
                 className="cyber-send px-3 disabled:opacity-30">
                 <Send className="w-4 h-4" />
               </button>
