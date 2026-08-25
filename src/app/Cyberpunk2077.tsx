@@ -11,7 +11,7 @@ import {
 import cyberdemonRank from './cyberdemon-rank.png'
 import arasakaRank from './arasaka-rank.png'
 import yellowRuneRank from './yellow-rune-rank.png'
-import NightCitySlots from './NightCitySlots'
+import NightCitySlots, { type SlotReelCount } from './NightCitySlots'
 
 type ArcadeGame = '2048' | 'slots'
 
@@ -239,6 +239,8 @@ export default function Cyberpunk2077({
   const [wiping, setWiping] = useState(false)
   const [activeGame, setActiveGame] = useState<ArcadeGame>('2048')
   const [slotsReady, setSlotsReady] = useState(false)
+  const [slotReels, setSlotReels] = useState<SlotReelCount>(3)
+  const [slotsSpinning, setSlotsSpinning] = useState(false)
   const chatEndRef = useRef<HTMLDivElement>(null)
   const touchStartRef = useRef<{ x: number; y: number } | null>(null)
   const cheatClicksRef = useRef<number[]>([])
@@ -713,8 +715,32 @@ export default function Cyberpunk2077({
           {activeGame === 'slots' && (
             <section className="cyber-help border p-4 text-xs">
               <div className="cyber-text mb-2 font-bold">AFTERLIFE</div>
-              Три барабана Найт-Сити. Соберите трёх одинаковых персонажей или пару на линии выплаты.
-              Чат справа остаётся общим для всей подсети.
+              <div className="mb-3 grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  disabled={slotsSpinning}
+                  onClick={() => setSlotReels(3)}
+                  className={`border px-2 py-2 text-[10px] font-black tracking-widest disabled:opacity-40 ${
+                    slotReels === 3 ? 'cyber-btn-accent' : 'cyber-btn-line'
+                  }`}
+                >
+                  3 SLOTS
+                </button>
+                <button
+                  type="button"
+                  disabled={slotsSpinning}
+                  onClick={() => setSlotReels(5)}
+                  className={`border px-2 py-2 text-[10px] font-black tracking-widest disabled:opacity-40 ${
+                    slotReels === 5 ? 'cyber-btn-accent' : 'cyber-btn-line'
+                  }`}
+                >
+                  5 SLOTS
+                </button>
+              </div>
+              {slotReels === 5
+                ? 'Пять барабанов: сеты из 2–5 одинаковых и сюжетные связки вроде Arasaka Tower или Phantom Liberty.'
+                : 'Три барабана Найт-Сити. Соберите трёх одинаковых персонажей или пару на линии выплаты.'}
+              {' '}Чат справа остаётся общим для всей подсети.
             </section>
           )}
         </aside>
@@ -792,7 +818,11 @@ export default function Cyberpunk2077({
           </div>
           <div className={activeGame === 'slots' ? 'flex w-full flex-col items-center' : 'hidden'}>
             {(activeGame === 'slots' || slotsReady) && (
-              <NightCitySlots active={activeGame === 'slots'} />
+              <NightCitySlots
+                active={activeGame === 'slots'}
+                reelCount={slotReels}
+                onSpinningChange={setSlotsSpinning}
+              />
             )}
           </div>
         </main>

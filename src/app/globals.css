@@ -606,7 +606,8 @@ body.theme-cyberpunk {
 }
 
 .cyber-reel {
-  height: 336px;
+  --slot-size: 112px;
+  height: calc(var(--slot-size) * 3);
   background: #000;
 }
 
@@ -634,8 +635,8 @@ body.theme-cyberpunk {
 }
 
 .cyber-payline {
-  top: 112px;
-  height: 112px;
+  top: calc(var(--slot-size, 112px) + 2px);
+  height: var(--slot-size, 112px);
   border-top: 2px solid var(--cyber-accent);
   border-bottom: 2px solid var(--cyber-accent);
   box-shadow: 0 0 16px color-mix(in srgb, var(--cyber-accent) 35%, transparent);
