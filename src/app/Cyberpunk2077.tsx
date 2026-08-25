@@ -643,7 +643,7 @@ export default function Cyberpunk2077({
         </div>
       )}
 
-      <div className="relative grid grid-cols-1 xl:grid-cols-[240px_minmax(420px,1fr)_340px] gap-5 p-5">
+      <div className="relative grid grid-cols-1 items-start xl:grid-cols-[240px_minmax(420px,1fr)_340px] gap-5 p-5">
         <aside className="space-y-4">
           <section className="cyber-panel border p-4 [clip-path:polygon(0_12px,12px_0,100%_0,100%_calc(100%-12px),calc(100%-12px)_100%,0_100%)]">
             <div className="cyber-line-text mb-3 flex items-center gap-2 text-xs font-bold tracking-widest">
@@ -678,38 +678,6 @@ export default function Cyberpunk2077({
                 Стрелки или WASD. На телефоне управляйте свайпами по игровому полю.
                 Соединяйте одинаковые нейрочипы и доберитесь до 2048.
               </section>
-
-              <div className="grid grid-cols-1 gap-2">
-                <button
-                  onClick={() => void becomeLegend()}
-                  className="cyber-btn-accent inline-flex items-center justify-center gap-2 border px-3 py-2.5 text-xs font-black"
-                >
-                  <Crown className="h-4 w-4" /> СТАТЬ ЛЕГЕНДОЙ
-                </button>
-                <button
-                  onClick={() => {
-                    setLeaderboardView('monthly')
-                    setLeaderboardOpen(true)
-                    void loadLeaderboards()
-                  }}
-                  className="cyber-btn-hot inline-flex items-center justify-center gap-2 border px-3 py-2.5 text-xs font-bold"
-                >
-                  <ListOrdered className="h-4 w-4" /> МЕСЯЦ СЛАВЫ
-                </button>
-                <button
-                  onClick={() => {
-                    setLeaderboardView('all-time')
-                    setLeaderboardOpen(true)
-                    void loadLeaderboards()
-                  }}
-                  className="cyber-legends-button cyber-btn-line inline-flex items-center justify-center gap-2 border px-3 py-2.5 text-xs font-black"
-                >
-                  <Crown className="h-4 w-4" /> ЛЕГЕНДЫ НАЙТ-СИТИ
-                </button>
-                {scoreStatus && !leaderboardOpen && (
-                  <div className="cyber-hot-text text-[10px] leading-relaxed">{scoreStatus}</div>
-                )}
-              </div>
             </>
           )}
           {activeGame === 'slots' && (
@@ -743,6 +711,40 @@ export default function Cyberpunk2077({
               {' '}Чат справа остаётся общим для всей подсети.
             </section>
           )}
+
+          <div className="grid grid-cols-1 gap-2">
+            {activeGame === '2048' && (
+              <button
+                onClick={() => void becomeLegend()}
+                className="cyber-btn-accent inline-flex items-center justify-center gap-2 border px-3 py-2.5 text-xs font-black"
+              >
+                <Crown className="h-4 w-4" /> СТАТЬ ЛЕГЕНДОЙ
+              </button>
+            )}
+            <button
+              onClick={() => {
+                setLeaderboardView('monthly')
+                setLeaderboardOpen(true)
+                void loadLeaderboards()
+              }}
+              className="cyber-btn-hot inline-flex items-center justify-center gap-2 border px-3 py-2.5 text-xs font-bold"
+            >
+              <ListOrdered className="h-4 w-4" /> МЕСЯЦ СЛАВЫ
+            </button>
+            <button
+              onClick={() => {
+                setLeaderboardView('all-time')
+                setLeaderboardOpen(true)
+                void loadLeaderboards()
+              }}
+              className="cyber-legends-button cyber-btn-line inline-flex items-center justify-center gap-2 border px-3 py-2.5 text-xs font-black"
+            >
+              <Crown className="h-4 w-4" /> ЛЕГЕНДЫ НАЙТ-СИТИ
+            </button>
+            {scoreStatus && !leaderboardOpen && (
+              <div className="cyber-hot-text text-[10px] leading-relaxed">{scoreStatus}</div>
+            )}
+          </div>
         </aside>
 
         <main className="flex flex-col items-center">
@@ -827,12 +829,12 @@ export default function Cyberpunk2077({
           </div>
         </main>
 
-        <aside className="cyber-chat flex min-h-[560px] flex-col border">
+        <aside className="cyber-chat flex h-[560px] w-full flex-col self-start border">
           <div className="cyber-chat-header flex items-center gap-2 border-b px-4 py-3">
             <MessageSquare className="w-4 h-4" />
             <span className="text-xs font-bold tracking-widest">GLOBAL CHAT // 2077</span>
           </div>
-          <div className="max-h-[560px] flex-1 space-y-3 overflow-y-auto p-4">
+          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
             {messages.length === 0 && (
               <div className="cyber-muted mt-8 text-center text-xs">
                 {supabase ? 'Канал пуст. Оставьте первое сообщение.' : 'Чат ожидает подключения Supabase.'}
