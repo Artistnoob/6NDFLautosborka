@@ -7,18 +7,23 @@ create table if not exists public.cyberpunk_messages (
 
 alter table public.cyberpunk_messages enable row level security;
 
+grant usage on schema public to anon, authenticated;
+grant select, insert on table public.cyberpunk_messages to anon, authenticated;
+grant select on table public.cyberpunk_scores to anon, authenticated;
+grant select on table public.cyberpunk_monthly_scores to anon, authenticated;
+
 drop policy if exists "Anyone can read cyberpunk chat" on public.cyberpunk_messages;
 create policy "Anyone can read cyberpunk chat"
   on public.cyberpunk_messages
   for select
-  to anon
+  to anon, authenticated
   using (true);
 
 drop policy if exists "Anyone can post to cyberpunk chat" on public.cyberpunk_messages;
 create policy "Anyone can post to cyberpunk chat"
   on public.cyberpunk_messages
   for insert
-  to anon
+  to anon, authenticated
   with check (true);
 
 create table if not exists public.cyberpunk_scores (
@@ -37,7 +42,7 @@ drop policy if exists "Anyone can read cyberpunk scores" on public.cyberpunk_sco
 create policy "Anyone can read cyberpunk scores"
   on public.cyberpunk_scores
   for select
-  to anon
+  to anon, authenticated
   using (true);
 
 create table if not exists public.cyberpunk_monthly_scores (
@@ -57,7 +62,7 @@ drop policy if exists "Anyone can read cyberpunk monthly scores" on public.cyber
 create policy "Anyone can read cyberpunk monthly scores"
   on public.cyberpunk_monthly_scores
   for select
-  to anon
+  to anon, authenticated
   using (true);
 
 create or replace function public.submit_cyberpunk_score(

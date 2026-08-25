@@ -261,19 +261,21 @@ export default function Cyberpunk2077({
           .from('cyberpunk_scores')
           .select('*')
           .order('score', { ascending: false })
-          .order('achieved_at', { ascending: true })
           .limit(20),
         supabase
           .from('cyberpunk_monthly_scores')
           .select('*')
           .eq('score_month', currentMonth)
           .order('score', { ascending: false })
-          .order('achieved_at', { ascending: true })
           .limit(20),
       ])
       if (allTimeResult.error) throw allTimeResult.error
-      if (monthlyResult.error) throw monthlyResult.error
       setAllTimeLeaderboard((allTimeResult.data ?? []) as LeaderboardEntry[])
+      if (monthlyResult.error) {
+        setMonthlyLeaderboard([])
+        setScoreStatus(readableSupabaseError(monthlyResult.error))
+        return
+      }
       setMonthlyLeaderboard((monthlyResult.data ?? []) as LeaderboardEntry[])
     } catch (error) {
       setScoreStatus(readableSupabaseError(error))
@@ -386,11 +388,11 @@ export default function Cyberpunk2077({
         const { data, error } = await supabase
           .from('cyberpunk_messages')
           .select('*')
-          .order('created_at', { ascending: false })
+          .order('created_at', { ascending: true })
           .limit(100)
         if (!active) return
         if (error) throw error
-        setMessages(((data ?? []) as ChatMessage[]).reverse())
+        setMessages((data ?? []) as ChatMessage[])
         setChatError('')
       } catch (error) {
         if (!active) return
@@ -837,7 +839,13 @@ export default function Cyberpunk2077({
           <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
             {messages.length === 0 && (
               <div className="cyber-muted mt-8 text-center text-xs">
-                {supabase ? 'Канал пуст. Оставьте первое сообщение.' : 'Чат ожидает подключения Supabase.'}
+                {!supabase
+                  ? 'Чат ожидает подключения Supabase.'
+                  : connectionState === 'connecting'
+                    ? 'Подключение к сети Найт-Сити...'
+                    : connectionState === 'error'
+                      ? (chatError || 'Нет связи с чатом.')
+                      : 'Канал пуст. Оставьте первое сообщение.'}
               </div>
             )}
             {messages.map(item => (
