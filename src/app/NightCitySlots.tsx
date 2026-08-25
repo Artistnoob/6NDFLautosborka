@@ -33,8 +33,10 @@ export type SlotReelCount = 3 | 5
 const SYMBOL_SIZE = 112
 const STRIP_LENGTH = 28
 const LAND_INDEX = 24
-const STARTING_EDDIES = 500
-const BETS = [10, 25, 50, 100] as const
+const STARTING_EDDIES = 5000
+const BETS = [100, 250, 500, 1000] as const
+const MIN_BET = 1
+const MAX_BET = 1_000_000
 const STOP_MS_3 = [1400, 2100, 2800] as const
 const STOP_MS_5 = [1100, 1500, 1900, 2300, 2800] as const
 
@@ -61,49 +63,57 @@ const SYMBOLS_3: SlotSymbol[] = [
 ]
 
 const SYMBOLS_5: SlotSymbol[] = [
-  { id: 'v', name: 'V', image: slotV, weight: 14, payout2: 1, payout3: 6, payout4: 18, payout5: 80 },
-  { id: 'jackie', name: 'Jackie', image: slotJackie, weight: 12, payout2: 1, payout3: 7, payout4: 20, payout5: 90 },
-  { id: 'judy', name: 'Judy', image: slotJudy, weight: 11, payout2: 1, payout3: 8, payout4: 22, payout5: 100 },
-  { id: 'panam', name: 'Panam', image: slotPanam, weight: 11, payout2: 1, payout3: 8, payout4: 22, payout5: 100 },
-  { id: 'rogue', name: 'Rogue', image: slotRogue, weight: 10, payout2: 1, payout3: 9, payout4: 24, payout5: 110 },
-  { id: 'kerry', name: 'Kerry', image: slotKerry, weight: 10, payout2: 1, payout3: 9, payout4: 24, payout5: 110 },
-  { id: 'river', name: 'River', image: slotRiver, weight: 10, payout2: 1, payout3: 9, payout4: 24, payout5: 110 },
-  { id: 'viktor', name: 'Viktor', image: slotViktor, weight: 9, payout2: 1, payout3: 10, payout4: 26, payout5: 120 },
-  { id: 'evelyn', name: 'Evelyn', image: slotEvelyn, weight: 9, payout2: 1, payout3: 10, payout4: 26, payout5: 120 },
-  { id: 'hands', name: 'Hands', image: slotHands, weight: 9, payout2: 1, payout3: 10, payout4: 28, payout5: 130 },
-  { id: 'wakako', name: 'Wakako', image: slotWakako, weight: 9, payout2: 1, payout3: 10, payout4: 28, payout5: 130 },
-  { id: 'tbug', name: 'T-Bug', image: slotTbug, weight: 8, payout2: 2, payout3: 11, payout4: 30, payout5: 140 },
-  { id: 'mitch', name: 'Mitch', image: slotMitch, weight: 8, payout2: 2, payout3: 11, payout4: 30, payout5: 140 },
-  { id: 'takemura', name: 'Takemura', image: slotTakemura, weight: 8, payout2: 2, payout3: 12, payout4: 32, payout5: 150 },
-  { id: 'reed', name: 'Reed', image: slotReed, weight: 8, payout2: 2, payout3: 12, payout4: 32, payout5: 150 },
-  { id: 'alt', name: 'Alt', image: slotAlt, weight: 7, payout2: 2, payout3: 13, payout4: 36, payout5: 170 },
-  { id: 'dex', name: 'Dex', image: slotDex, weight: 7, payout2: 2, payout3: 13, payout4: 36, payout5: 170 },
-  { id: 'myers', name: 'Myers', image: slotMyers, weight: 7, payout2: 2, payout3: 14, payout4: 38, payout5: 180 },
-  { id: 'songbird', name: 'Songbird', image: slotSongbird, weight: 6, payout2: 2, payout3: 16, payout4: 42, payout5: 200 },
-  { id: 'hansen', name: 'Hansen', image: slotHansen, weight: 6, payout2: 2, payout3: 16, payout4: 42, payout5: 200 },
-  { id: 'hanako', name: 'Hanako', image: slotHanako, weight: 5, payout2: 3, payout3: 18, payout4: 50, payout5: 240 },
-  { id: 'yorinobu', name: 'Yorinobu', image: slotYorinobu, weight: 5, payout2: 3, payout3: 18, payout4: 50, payout5: 240 },
-  { id: 'johnny', name: 'Johnny', image: slotJohnny, weight: 5, payout2: 3, payout3: 20, payout4: 55, payout5: 260 },
-  { id: 'smasher', name: 'Smasher', image: slotSmasher, weight: 3, payout2: 4, payout3: 28, payout4: 80, payout5: 400 },
+  { id: 'v', name: 'V', image: slotV, weight: 14, payout2: 1, payout3: 3, payout4: 8, payout5: 25 },
+  { id: 'jackie', name: 'Jackie', image: slotJackie, weight: 12, payout2: 1, payout3: 3, payout4: 9, payout5: 28 },
+  { id: 'judy', name: 'Judy', image: slotJudy, weight: 11, payout2: 1, payout3: 4, payout4: 10, payout5: 32 },
+  { id: 'panam', name: 'Panam', image: slotPanam, weight: 11, payout2: 1, payout3: 4, payout4: 10, payout5: 32 },
+  { id: 'rogue', name: 'Rogue', image: slotRogue, weight: 10, payout2: 1, payout3: 4, payout4: 11, payout5: 35 },
+  { id: 'kerry', name: 'Kerry', image: slotKerry, weight: 10, payout2: 1, payout3: 4, payout4: 11, payout5: 35 },
+  { id: 'river', name: 'River', image: slotRiver, weight: 10, payout2: 1, payout3: 4, payout4: 11, payout5: 35 },
+  { id: 'viktor', name: 'Viktor', image: slotViktor, weight: 9, payout2: 1, payout3: 5, payout4: 12, payout5: 38 },
+  { id: 'evelyn', name: 'Evelyn', image: slotEvelyn, weight: 9, payout2: 1, payout3: 5, payout4: 12, payout5: 38 },
+  { id: 'hands', name: 'Hands', image: slotHands, weight: 9, payout2: 1, payout3: 5, payout4: 13, payout5: 40 },
+  { id: 'wakako', name: 'Wakako', image: slotWakako, weight: 9, payout2: 1, payout3: 5, payout4: 13, payout5: 40 },
+  { id: 'tbug', name: 'T-Bug', image: slotTbug, weight: 8, payout2: 1, payout3: 5, payout4: 14, payout5: 45 },
+  { id: 'mitch', name: 'Mitch', image: slotMitch, weight: 8, payout2: 1, payout3: 5, payout4: 14, payout5: 45 },
+  { id: 'takemura', name: 'Takemura', image: slotTakemura, weight: 8, payout2: 1, payout3: 6, payout4: 15, payout5: 48 },
+  { id: 'reed', name: 'Reed', image: slotReed, weight: 8, payout2: 1, payout3: 6, payout4: 15, payout5: 48 },
+  { id: 'alt', name: 'Alt', image: slotAlt, weight: 7, payout2: 1, payout3: 6, payout4: 16, payout5: 52 },
+  { id: 'dex', name: 'Dex', image: slotDex, weight: 7, payout2: 1, payout3: 6, payout4: 16, payout5: 52 },
+  { id: 'myers', name: 'Myers', image: slotMyers, weight: 7, payout2: 1, payout3: 7, payout4: 18, payout5: 55 },
+  { id: 'songbird', name: 'Songbird', image: slotSongbird, weight: 6, payout2: 1, payout3: 7, payout4: 20, payout5: 60 },
+  { id: 'hansen', name: 'Hansen', image: slotHansen, weight: 6, payout2: 1, payout3: 7, payout4: 20, payout5: 60 },
+  { id: 'hanako', name: 'Hanako', image: slotHanako, weight: 5, payout2: 2, payout3: 8, payout4: 22, payout5: 70 },
+  { id: 'yorinobu', name: 'Yorinobu', image: slotYorinobu, weight: 5, payout2: 2, payout3: 8, payout4: 22, payout5: 70 },
+  { id: 'johnny', name: 'Johnny', image: slotJohnny, weight: 5, payout2: 2, payout3: 9, payout4: 25, payout5: 80 },
+  { id: 'smasher', name: 'Smasher', image: slotSmasher, weight: 3, payout2: 3, payout3: 12, payout4: 35, payout5: 100 },
 ]
 
 const THEMES: { ids: string[]; label: string; mult: number }[] = [
-  { ids: ['hanako', 'yorinobu', 'takemura', 'smasher'], label: 'ARASAKA TOWER', mult: 50 },
-  { ids: ['reed', 'myers', 'songbird', 'hansen'], label: 'PHANTOM LIBERTY', mult: 45 },
-  { ids: ['v', 'jackie', 'tbug', 'dex'], label: 'THE HEIST', mult: 32 },
-  { ids: ['rogue', 'johnny', 'kerry', 'v'], label: 'AFTERLIFE', mult: 28 },
-  { ids: ['hanako', 'yorinobu', 'takemura'], label: 'ARASAKA BLOOD', mult: 22 },
-  { ids: ['reed', 'myers', 'songbird'], label: 'NUSA DIRECTIVE', mult: 20 },
-  { ids: ['johnny', 'alt', 'v'], label: 'RELIC SYNC', mult: 20 },
-  { ids: ['johnny', 'kerry', 'rogue'], label: 'SAMURAI', mult: 18 },
-  { ids: ['hansen', 'hands', 'reed'], label: 'DOGTOWN DEAL', mult: 18 },
-  { ids: ['v', 'jackie', 'tbug'], label: 'KONPEKI CREW', mult: 16 },
-  { ids: ['panam', 'mitch', 'v'], label: 'ALDECALDOS', mult: 16 },
-  { ids: ['judy', 'evelyn', 'v'], label: 'BRAINDANCE', mult: 16 },
-  { ids: ['rogue', 'hands', 'wakako'], label: 'FIXER NETWORK', mult: 16 },
-  { ids: ['v', 'viktor', 'jackie'], label: 'WATSON', mult: 14 },
-  { ids: ['v', 'river', 'jackie'], label: 'NCPD FILE', mult: 14 },
+  { ids: ['hanako', 'yorinobu', 'takemura', 'smasher'], label: 'ARASAKA TOWER', mult: 18 },
+  { ids: ['reed', 'myers', 'songbird', 'hansen'], label: 'PHANTOM LIBERTY', mult: 16 },
+  { ids: ['v', 'jackie', 'tbug', 'dex'], label: 'THE HEIST', mult: 12 },
+  { ids: ['rogue', 'johnny', 'kerry', 'v'], label: 'AFTERLIFE', mult: 10 },
+  { ids: ['hanako', 'yorinobu', 'takemura'], label: 'ARASAKA BLOOD', mult: 8 },
+  { ids: ['reed', 'myers', 'songbird'], label: 'NUSA DIRECTIVE', mult: 8 },
+  { ids: ['johnny', 'alt', 'v'], label: 'RELIC SYNC', mult: 8 },
+  { ids: ['johnny', 'kerry', 'rogue'], label: 'SAMURAI', mult: 7 },
+  { ids: ['hansen', 'hands', 'reed'], label: 'DOGTOWN DEAL', mult: 7 },
+  { ids: ['v', 'jackie', 'tbug'], label: 'KONPEKI CREW', mult: 6 },
+  { ids: ['panam', 'mitch', 'v'], label: 'ALDECALDOS', mult: 6 },
+  { ids: ['judy', 'evelyn', 'v'], label: 'BRAINDANCE', mult: 6 },
+  { ids: ['rogue', 'hands', 'wakako'], label: 'FIXER NETWORK', mult: 6 },
+  { ids: ['v', 'viktor', 'jackie'], label: 'WATSON', mult: 5 },
+  { ids: ['v', 'river', 'jackie'], label: 'NCPD FILE', mult: 5 },
 ]
+
+function parseBet(raw: string): number | null {
+  const digits = raw.replace(/\D/g, '')
+  if (!digits) return null
+  const value = Number(digits)
+  if (!Number.isFinite(value) || value < MIN_BET) return null
+  return Math.min(MAX_BET, Math.floor(value))
+}
 
 function themeNames(ids: string[]): string {
   return ids
@@ -271,7 +281,7 @@ function evaluateFiveGrid(grid: SlotSymbol[][], bet: number): SpinOutcome {
     themeWin += bet * theme.mult
     themeLabels.push(theme.label)
     addHits(themeCells)
-    if (theme.mult >= 32) jackpot = true
+    if (theme.mult >= 12) jackpot = true
   }
 
   const win = kindWin + themeWin
@@ -303,7 +313,8 @@ export default function NightCitySlots({
 }) {
   const [credits, setCredits] = useState(STARTING_EDDIES)
   const [best, setBest] = useState(STARTING_EDDIES)
-  const [bet, setBet] = useState<(typeof BETS)[number]>(25)
+  const [bet, setBet] = useState(250)
+  const [customBet, setCustomBet] = useState('')
   const [strips, setStrips] = useState<SlotSymbol[][]>(() => idleStrips(reelCount))
   const [offsets, setOffsets] = useState(() => idleOffsets(reelCount))
   const [armed, setArmed] = useState(true)
@@ -317,8 +328,13 @@ export default function NightCitySlots({
   useEffect(() => {
     const storedCredits = Number(localStorage.getItem('cyber-slots-credits') ?? STARTING_EDDIES)
     const storedBest = Number(localStorage.getItem('cyber-slots-best') ?? storedCredits)
+    const storedBet = parseBet(localStorage.getItem('cyber-slots-bet') ?? '')
     setCredits(Number.isFinite(storedCredits) ? Math.max(0, storedCredits) : STARTING_EDDIES)
     setBest(Number.isFinite(storedBest) ? Math.max(0, storedBest) : STARTING_EDDIES)
+    if (storedBet != null) {
+      setBet(storedBet)
+      if (!(BETS as readonly number[]).includes(storedBet)) setCustomBet(String(storedBet))
+    }
   }, [])
 
   useEffect(() => {
@@ -343,8 +359,40 @@ export default function NightCitySlots({
     })
   }, [])
 
+  const persistBet = useCallback((nextBet: number) => {
+    setBet(nextBet)
+    localStorage.setItem('cyber-slots-bet', String(nextBet))
+  }, [])
+
+  const selectPresetBet = (value: number) => {
+    setCustomBet('')
+    persistBet(value)
+  }
+
+  const onCustomBetChange = (raw: string) => {
+    const digits = raw.replace(/\D/g, '')
+    setCustomBet(digits)
+    const parsed = parseBet(digits)
+    if (parsed != null) persistBet(parsed)
+  }
+
+  const onCustomBetBlur = () => {
+    const parsed = parseBet(customBet)
+    if (parsed == null) {
+      if (customBet.trim() === '') return
+      setCustomBet(String(bet))
+      return
+    }
+    persistBet(parsed)
+    setCustomBet(String(parsed))
+  }
+
   const spin = useCallback(() => {
     if (spinning) return
+    if (bet < MIN_BET) {
+      setStatus('Укажите ставку.')
+      return
+    }
     if (credits < bet) {
       setStatus('Недостаточно эдди.')
       return
@@ -499,19 +547,37 @@ export default function NightCitySlots({
         </div>
 
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {BETS.map(value => (
               <button
                 key={value}
                 disabled={spinning}
-                onClick={() => setBet(value)}
+                onClick={() => selectPresetBet(value)}
                 className={`border px-2.5 py-1.5 font-mono text-xs font-bold ${
-                  bet === value ? 'cyber-btn-accent' : 'cyber-btn-line'
+                  customBet === '' && bet === value ? 'cyber-btn-accent' : 'cyber-btn-line'
                 } disabled:opacity-40`}
               >
                 {value}
               </button>
             ))}
+            <label className={`flex items-center gap-1.5 border px-2 py-1 ${
+              customBet !== '' ? 'cyber-btn-accent' : 'cyber-btn-line'
+            }`}>
+              <span className="text-[10px] font-black tracking-widest">СВОЯ</span>
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={7}
+                disabled={spinning}
+                value={customBet}
+                onChange={event => onCustomBetChange(event.target.value)}
+                onBlur={onCustomBetBlur}
+                placeholder="ставка"
+                aria-label="Своя ставка"
+                className="cyber-input w-16 border-0 bg-transparent p-0 font-mono text-xs outline-none disabled:opacity-40"
+              />
+            </label>
           </div>
           <button
             onClick={spin}
