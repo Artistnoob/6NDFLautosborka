@@ -694,3 +694,17 @@ body.theme-cyberpunk {
   color: var(--cyber-banner-text);
   clip-path: polygon(0 8px, 8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%);
 }
+
+.cyber-quiz-correct {
+  border-color: #00f0ff;
+  background: color-mix(in srgb, #00f0ff 16%, transparent);
+  color: #7af6ff;
+  box-shadow: 0 0 14px color-mix(in srgb, #00f0ff 28%, transparent);
+}
+
+.cyber-quiz-wrong {
+  border-color: #ff2a2a;
+  background: color-mix(in srgb, #ff2a2a 16%, transparent);
+  color: #ff8b8b;
+  box-shadow: 0 0 14px color-mix(in srgb, #ff2a2a 24%, transparent);
+}

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Image, { type StaticImageData } from 'next/image'
 import { Coins, RotateCcw } from 'lucide-react'
+import NightCityContracts from './NightCityContracts'
 import slotV from './slots/slot-v.png'
 import slotJohnny from './slots/slot-johnny.png'
 import slotJudy from './slots/slot-judy.png'
@@ -323,6 +324,7 @@ export default function NightCitySlots({
   const [lastWin, setLastWin] = useState(0)
   const [jackpot, setJackpot] = useState(false)
   const [hits, setHits] = useState<Set<string>>(() => new Set())
+  const [quizBusy, setQuizBusy] = useState(false)
   const spinTimerRef = useRef<number | null>(null)
 
   useEffect(() => {
@@ -456,14 +458,23 @@ export default function NightCitySlots({
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement
       if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return
-      if (!active) return
+      if (!active || quizBusy) return
       if (event.code !== 'Space' && event.key !== 'Enter') return
       event.preventDefault()
       spin()
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [active, spin])
+  }, [active, quizBusy, spin])
+
+  const awardQuizEddies = (amount: number) => {
+    setCredits(current => {
+      const next = current + amount
+      persistCredits(next)
+      return next
+    })
+    setStatus(`Контракт закрыт. +${amount} эдди.`)
+  }
 
   const reboot = () => {
     if (spinning) return
@@ -488,13 +499,20 @@ export default function NightCitySlots({
           <Coins className="h-5 w-5" />
           <span className="font-bold tracking-widest">AFTERLIFE REELS</span>
         </div>
-        <button
-          onClick={reboot}
-          disabled={spinning}
-          className="cyber-btn-accent inline-flex items-center gap-2 border px-3 py-2 text-xs font-bold disabled:opacity-40"
-        >
-          <RotateCcw className="h-4 w-4" /> ПОПОЛНИТЬ
-        </button>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <NightCityContracts
+            disabled={spinning}
+            onAward={awardQuizEddies}
+            onBusyChange={setQuizBusy}
+          />
+          <button
+            onClick={reboot}
+            disabled={spinning}
+            className="cyber-btn-accent inline-flex items-center gap-2 border px-3 py-2 text-xs font-bold disabled:opacity-40"
+          >
+            <RotateCcw className="h-4 w-4" /> ПОПОЛНИТЬ
+          </button>
+        </div>
       </div>
 
       <div className={`cyber-slots relative w-full border-2 p-4 ${jackpot ? 'is-jackpot' : ''} ${lastWin > 0 && !spinning ? 'is-win' : ''}`}>
