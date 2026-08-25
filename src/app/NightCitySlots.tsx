@@ -17,6 +17,16 @@ import slotReed from './slots/slot-reed.png'
 import slotMyers from './slots/slot-myers.png'
 import slotHansen from './slots/slot-hansen.png'
 import slotHands from './slots/slot-hands.png'
+import slotKerry from './slots/slot-kerry.png'
+import slotRiver from './slots/slot-river.png'
+import slotEvelyn from './slots/slot-evelyn.png'
+import slotViktor from './slots/slot-viktor.png'
+import slotSongbird from './slots/slot-songbird.png'
+import slotDex from './slots/slot-dex.png'
+import slotYorinobu from './slots/slot-yorinobu.png'
+import slotMitch from './slots/slot-mitch.png'
+import slotWakako from './slots/slot-wakako.png'
+import slotTbug from './slots/slot-tbug.png'
 
 export type SlotReelCount = 3 | 5
 
@@ -51,38 +61,55 @@ const SYMBOLS_3: SlotSymbol[] = [
 ]
 
 const SYMBOLS_5: SlotSymbol[] = [
-  { id: 'v', name: 'V', image: slotV, weight: 16, payout2: 1, payout3: 6, payout4: 18, payout5: 80 },
-  { id: 'jackie', name: 'Jackie', image: slotJackie, weight: 14, payout2: 1, payout3: 7, payout4: 20, payout5: 90 },
-  { id: 'judy', name: 'Judy', image: slotJudy, weight: 13, payout2: 2, payout3: 8, payout4: 22, payout5: 100 },
-  { id: 'panam', name: 'Panam', image: slotPanam, weight: 12, payout2: 2, payout3: 9, payout4: 24, payout5: 110 },
-  { id: 'rogue', name: 'Rogue', image: slotRogue, weight: 11, payout2: 2, payout3: 10, payout4: 28, payout5: 120 },
-  { id: 'hands', name: 'Hands', image: slotHands, weight: 10, payout2: 2, payout3: 11, payout4: 30, payout5: 130 },
-  { id: 'takemura', name: 'Takemura', image: slotTakemura, weight: 10, payout2: 2, payout3: 12, payout4: 32, payout5: 140 },
-  { id: 'reed', name: 'Reed', image: slotReed, weight: 9, payout2: 3, payout3: 13, payout4: 36, payout5: 160 },
-  { id: 'alt', name: 'Alt', image: slotAlt, weight: 8, payout2: 3, payout3: 15, payout4: 40, payout5: 180 },
-  { id: 'myers', name: 'Myers', image: slotMyers, weight: 8, payout2: 3, payout3: 16, payout4: 42, payout5: 190 },
-  { id: 'hansen', name: 'Hansen', image: slotHansen, weight: 7, payout2: 3, payout3: 18, payout4: 48, payout5: 220 },
-  { id: 'hanako', name: 'Hanako', image: slotHanako, weight: 6, payout2: 4, payout3: 20, payout4: 55, payout5: 260 },
-  { id: 'johnny', name: 'Johnny', image: slotJohnny, weight: 6, payout2: 4, payout3: 22, payout4: 60, payout5: 280 },
-  { id: 'smasher', name: 'Smasher', image: slotSmasher, weight: 4, payout2: 5, payout3: 30, payout4: 80, payout5: 400 },
+  { id: 'v', name: 'V', image: slotV, weight: 14, payout2: 1, payout3: 6, payout4: 18, payout5: 80 },
+  { id: 'jackie', name: 'Jackie', image: slotJackie, weight: 12, payout2: 1, payout3: 7, payout4: 20, payout5: 90 },
+  { id: 'judy', name: 'Judy', image: slotJudy, weight: 11, payout2: 1, payout3: 8, payout4: 22, payout5: 100 },
+  { id: 'panam', name: 'Panam', image: slotPanam, weight: 11, payout2: 1, payout3: 8, payout4: 22, payout5: 100 },
+  { id: 'rogue', name: 'Rogue', image: slotRogue, weight: 10, payout2: 1, payout3: 9, payout4: 24, payout5: 110 },
+  { id: 'kerry', name: 'Kerry', image: slotKerry, weight: 10, payout2: 1, payout3: 9, payout4: 24, payout5: 110 },
+  { id: 'river', name: 'River', image: slotRiver, weight: 10, payout2: 1, payout3: 9, payout4: 24, payout5: 110 },
+  { id: 'viktor', name: 'Viktor', image: slotViktor, weight: 9, payout2: 1, payout3: 10, payout4: 26, payout5: 120 },
+  { id: 'evelyn', name: 'Evelyn', image: slotEvelyn, weight: 9, payout2: 1, payout3: 10, payout4: 26, payout5: 120 },
+  { id: 'hands', name: 'Hands', image: slotHands, weight: 9, payout2: 1, payout3: 10, payout4: 28, payout5: 130 },
+  { id: 'wakako', name: 'Wakako', image: slotWakako, weight: 9, payout2: 1, payout3: 10, payout4: 28, payout5: 130 },
+  { id: 'tbug', name: 'T-Bug', image: slotTbug, weight: 8, payout2: 2, payout3: 11, payout4: 30, payout5: 140 },
+  { id: 'mitch', name: 'Mitch', image: slotMitch, weight: 8, payout2: 2, payout3: 11, payout4: 30, payout5: 140 },
+  { id: 'takemura', name: 'Takemura', image: slotTakemura, weight: 8, payout2: 2, payout3: 12, payout4: 32, payout5: 150 },
+  { id: 'reed', name: 'Reed', image: slotReed, weight: 8, payout2: 2, payout3: 12, payout4: 32, payout5: 150 },
+  { id: 'alt', name: 'Alt', image: slotAlt, weight: 7, payout2: 2, payout3: 13, payout4: 36, payout5: 170 },
+  { id: 'dex', name: 'Dex', image: slotDex, weight: 7, payout2: 2, payout3: 13, payout4: 36, payout5: 170 },
+  { id: 'myers', name: 'Myers', image: slotMyers, weight: 7, payout2: 2, payout3: 14, payout4: 38, payout5: 180 },
+  { id: 'songbird', name: 'Songbird', image: slotSongbird, weight: 6, payout2: 2, payout3: 16, payout4: 42, payout5: 200 },
+  { id: 'hansen', name: 'Hansen', image: slotHansen, weight: 6, payout2: 2, payout3: 16, payout4: 42, payout5: 200 },
+  { id: 'hanako', name: 'Hanako', image: slotHanako, weight: 5, payout2: 3, payout3: 18, payout4: 50, payout5: 240 },
+  { id: 'yorinobu', name: 'Yorinobu', image: slotYorinobu, weight: 5, payout2: 3, payout3: 18, payout4: 50, payout5: 240 },
+  { id: 'johnny', name: 'Johnny', image: slotJohnny, weight: 5, payout2: 3, payout3: 20, payout4: 55, payout5: 260 },
+  { id: 'smasher', name: 'Smasher', image: slotSmasher, weight: 3, payout2: 4, payout3: 28, payout4: 80, payout5: 400 },
 ]
 
 const THEMES: { ids: string[]; label: string; mult: number }[] = [
-  { ids: ['hanako', 'takemura', 'smasher'], label: 'ARASAKA TOWER', mult: 40 },
-  { ids: ['reed', 'myers', 'hansen'], label: 'PHANTOM LIBERTY', mult: 30 },
-  { ids: ['hanako', 'smasher'], label: 'ARASAKA ELITE', mult: 18 },
-  { ids: ['reed', 'hansen'], label: 'BLACK SAPPHIRE', mult: 16 },
-  { ids: ['johnny', 'alt'], label: 'RELIC SYNC', mult: 15 },
-  { ids: ['myers', 'smasher'], label: 'NUSA STRIKE', mult: 14 },
-  { ids: ['hanako', 'takemura'], label: 'ARASAKA PACT', mult: 12 },
-  { ids: ['reed', 'myers'], label: 'NUSA DIRECTIVE', mult: 12 },
-  { ids: ['hansen', 'hands'], label: 'DOGTOWN DEAL', mult: 10 },
-  { ids: ['rogue', 'johnny'], label: 'AFTERLIFE KINGS', mult: 10 },
-  { ids: ['hands', 'rogue'], label: 'FIXER NETWORK', mult: 9 },
-  { ids: ['v', 'jackie'], label: 'CHOOMS', mult: 8 },
-  { ids: ['panam', 'v'], label: 'ALDECALDOS', mult: 8 },
-  { ids: ['judy', 'v'], label: 'BRAINDANCE', mult: 8 },
+  { ids: ['hanako', 'yorinobu', 'takemura', 'smasher'], label: 'ARASAKA TOWER', mult: 50 },
+  { ids: ['reed', 'myers', 'songbird', 'hansen'], label: 'PHANTOM LIBERTY', mult: 45 },
+  { ids: ['v', 'jackie', 'tbug', 'dex'], label: 'THE HEIST', mult: 32 },
+  { ids: ['rogue', 'johnny', 'kerry', 'v'], label: 'AFTERLIFE', mult: 28 },
+  { ids: ['hanako', 'yorinobu', 'takemura'], label: 'ARASAKA BLOOD', mult: 22 },
+  { ids: ['reed', 'myers', 'songbird'], label: 'NUSA DIRECTIVE', mult: 20 },
+  { ids: ['johnny', 'alt', 'v'], label: 'RELIC SYNC', mult: 20 },
+  { ids: ['johnny', 'kerry', 'rogue'], label: 'SAMURAI', mult: 18 },
+  { ids: ['hansen', 'hands', 'reed'], label: 'DOGTOWN DEAL', mult: 18 },
+  { ids: ['v', 'jackie', 'tbug'], label: 'KONPEKI CREW', mult: 16 },
+  { ids: ['panam', 'mitch', 'v'], label: 'ALDECALDOS', mult: 16 },
+  { ids: ['judy', 'evelyn', 'v'], label: 'BRAINDANCE', mult: 16 },
+  { ids: ['rogue', 'hands', 'wakako'], label: 'FIXER NETWORK', mult: 16 },
+  { ids: ['v', 'viktor', 'jackie'], label: 'WATSON', mult: 14 },
+  { ids: ['v', 'river', 'jackie'], label: 'NCPD FILE', mult: 14 },
 ]
+
+function themeNames(ids: string[]): string {
+  return ids
+    .map(id => SYMBOLS_5.find(symbol => symbol.id === id)?.name ?? id)
+    .join(', ')
+}
 
 function poolFor(reels: SlotReelCount): SlotSymbol[] {
   return reels === 5 ? SYMBOLS_5 : SYMBOLS_3
@@ -98,79 +125,162 @@ function pickSymbol(pool: SlotSymbol[]): SlotSymbol {
   return pool[0]
 }
 
-function buildStrip(result: SlotSymbol, pool: SlotSymbol[]): SlotSymbol[] {
+function buildStrip(visible: [SlotSymbol, SlotSymbol, SlotSymbol], pool: SlotSymbol[]): SlotSymbol[] {
   const strip = Array.from({ length: STRIP_LENGTH }, () => pickSymbol(pool))
-  strip[LAND_INDEX] = result
+  strip[LAND_INDEX - 1] = visible[0]
+  strip[LAND_INDEX] = visible[1]
+  strip[LAND_INDEX + 1] = visible[2]
   return strip
 }
 
 function idleStrips(reels: SlotReelCount): SlotSymbol[][] {
   const pool = poolFor(reels)
-  return Array.from({ length: reels }, () => buildStrip(pickSymbol(pool), pool))
+  return Array.from({ length: reels }, () => (
+    buildStrip([pickSymbol(pool), pickSymbol(pool), pickSymbol(pool)], pool)
+  ))
 }
 
 function idleOffsets(reels: SlotReelCount): number[] {
   return Array.from({ length: reels }, () => reelOffset(LAND_INDEX))
 }
 
-function evaluateThree(results: SlotSymbol[], bet: number): { win: number; label: string; jackpot: boolean } {
+interface CellPos {
+  reel: number
+  row: number
+}
+
+interface SpinOutcome {
+  win: number
+  label: string
+  jackpot: boolean
+  hits: CellPos[]
+}
+
+function cellKey(cell: CellPos): string {
+  return `${cell.reel}:${cell.row}`
+}
+
+function payoutForCount(symbol: SlotSymbol, count: number): number {
+  if (count >= 5) return symbol.payout5
+  if (count === 4) return symbol.payout4
+  if (count === 3) return symbol.payout3
+  if (count === 2) return symbol.payout2
+  return 0
+}
+
+function consecutiveRuns(symbols: SlotSymbol[], cells: CellPos[]): { symbol: SlotSymbol; cells: CellPos[] }[] {
+  const runs: { symbol: SlotSymbol; cells: CellPos[] }[] = []
+  let start = 0
+  while (start < symbols.length) {
+    let end = start + 1
+    while (end < symbols.length && symbols[end].id === symbols[start].id) end++
+    if (end - start >= 3) {
+      runs.push({ symbol: symbols[start], cells: cells.slice(start, end) })
+    }
+    start = end
+  }
+  return runs
+}
+
+const FIVE_LINES: { kind: 'horizontal' | 'vertical' | 'diagonal'; cells: CellPos[] }[] = [
+  { kind: 'horizontal', cells: [0, 1, 2, 3, 4].map(reel => ({ reel, row: 0 })) },
+  { kind: 'horizontal', cells: [0, 1, 2, 3, 4].map(reel => ({ reel, row: 1 })) },
+  { kind: 'horizontal', cells: [0, 1, 2, 3, 4].map(reel => ({ reel, row: 2 })) },
+  { kind: 'vertical', cells: [0, 1, 2].map(row => ({ reel: 0, row })) },
+  { kind: 'vertical', cells: [0, 1, 2].map(row => ({ reel: 1, row })) },
+  { kind: 'vertical', cells: [0, 1, 2].map(row => ({ reel: 2, row })) },
+  { kind: 'vertical', cells: [0, 1, 2].map(row => ({ reel: 3, row })) },
+  { kind: 'vertical', cells: [0, 1, 2].map(row => ({ reel: 4, row })) },
+  { kind: 'diagonal', cells: [{ reel: 0, row: 0 }, { reel: 1, row: 1 }, { reel: 2, row: 2 }] },
+  { kind: 'diagonal', cells: [{ reel: 1, row: 0 }, { reel: 2, row: 1 }, { reel: 3, row: 2 }] },
+  { kind: 'diagonal', cells: [{ reel: 2, row: 0 }, { reel: 3, row: 1 }, { reel: 4, row: 2 }] },
+  { kind: 'diagonal', cells: [{ reel: 0, row: 2 }, { reel: 1, row: 1 }, { reel: 2, row: 0 }] },
+  { kind: 'diagonal', cells: [{ reel: 1, row: 2 }, { reel: 2, row: 1 }, { reel: 3, row: 0 }] },
+  { kind: 'diagonal', cells: [{ reel: 2, row: 2 }, { reel: 3, row: 1 }, { reel: 4, row: 0 }] },
+  { kind: 'diagonal', cells: [{ reel: 0, row: 0 }, { reel: 1, row: 1 }, { reel: 2, row: 2 }, { reel: 3, row: 1 }, { reel: 4, row: 0 }] },
+  { kind: 'diagonal', cells: [{ reel: 0, row: 2 }, { reel: 1, row: 1 }, { reel: 2, row: 0 }, { reel: 3, row: 1 }, { reel: 4, row: 2 }] },
+]
+
+const LINE_KIND_LABEL: Record<'horizontal' | 'vertical' | 'diagonal', string> = {
+  horizontal: 'ГОРИЗОНТ',
+  vertical: 'ВЕРТИКАЛЬ',
+  diagonal: 'ДИАГОНАЛЬ',
+}
+
+function evaluateThree(results: SlotSymbol[], bet: number): SpinOutcome {
   const [left, center, right] = results
+  const hits = (reels: number[]): CellPos[] => reels.map(reel => ({ reel, row: 1 }))
   if (left.id === center.id && center.id === right.id) {
     return {
       win: bet * left.payout3,
       label: `ТРИ ${left.name.toUpperCase()}`,
       jackpot: left.payout3 >= 50,
+      hits: hits([0, 1, 2]),
     }
   }
   if (left.id === center.id) {
-    return { win: bet * left.payout2, label: `ПАРА // ${left.name}`, jackpot: false }
+    return { win: bet * left.payout2, label: `ПАРА // ${left.name}`, jackpot: false, hits: hits([0, 1]) }
   }
   if (center.id === right.id) {
-    return { win: bet * center.payout2, label: `ПАРА // ${center.name}`, jackpot: false }
+    return { win: bet * center.payout2, label: `ПАРА // ${center.name}`, jackpot: false, hits: hits([1, 2]) }
   }
   if (left.id === right.id) {
-    return { win: bet * left.payout2, label: `ПАРА // ${left.name}`, jackpot: false }
+    return { win: bet * left.payout2, label: `ПАРА // ${left.name}`, jackpot: false, hits: hits([0, 2]) }
   }
-  return { win: 0, label: 'NO PAYOUT', jackpot: false }
+  return { win: 0, label: 'NO PAYOUT', jackpot: false, hits: [] }
 }
 
-function evaluateFive(results: SlotSymbol[], bet: number): { win: number; label: string; jackpot: boolean } {
-  const counts = new Map<string, { symbol: SlotSymbol; count: number }>()
-  for (const symbol of results) {
-    const previous = counts.get(symbol.id)
-    counts.set(symbol.id, { symbol, count: (previous?.count ?? 0) + 1 })
-  }
-  const bestKind = [...counts.values()].sort((left, right) => right.count - left.count)[0]
-
+function evaluateFiveGrid(grid: SlotSymbol[][], bet: number): SpinOutcome {
+  const labels: string[] = []
+  const hitMap = new Map<string, CellPos>()
   let kindWin = 0
-  let kindLabel = ''
-  if (bestKind.count === 5) {
-    kindWin = bet * bestKind.symbol.payout5
-    kindLabel = `ПЯТЬ ${bestKind.symbol.name.toUpperCase()}`
-  } else if (bestKind.count === 4) {
-    kindWin = bet * bestKind.symbol.payout4
-    kindLabel = `ЧЕТЫРЕ ${bestKind.symbol.name.toUpperCase()}`
-  } else if (bestKind.count === 3) {
-    kindWin = bet * bestKind.symbol.payout3
-    kindLabel = `ТРИ ${bestKind.symbol.name.toUpperCase()}`
-  } else if (bestKind.count === 2) {
-    kindWin = bet * bestKind.symbol.payout2
-    kindLabel = `ПАРА // ${bestKind.symbol.name}`
+  let jackpot = false
+
+  const addHits = (cells: CellPos[]) => {
+    for (const cell of cells) hitMap.set(cellKey(cell), cell)
   }
 
-  const ids = new Set(results.map(symbol => symbol.id))
-  const theme = [...THEMES]
-    .sort((left, right) => right.mult - left.mult)
-    .find(entry => entry.ids.every(id => ids.has(id)))
-  const themeWin = theme ? bet * theme.mult : 0
-  const themeLabel = theme?.label ?? ''
+  for (const line of FIVE_LINES) {
+    const symbols = line.cells.map(cell => grid[cell.row][cell.reel])
+    const minCount = line.kind === 'vertical' ? 3 : 3
+    for (const run of consecutiveRuns(symbols, line.cells)) {
+      if (run.cells.length < minCount) continue
+      const count = run.cells.length
+      const pay = payoutForCount(run.symbol, Math.min(count, 5))
+      if (pay <= 0) continue
+      kindWin += bet * pay
+      const countLabel = count >= 5 ? 'ПЯТЬ' : count === 4 ? 'ЧЕТЫРЕ' : 'ТРИ'
+      labels.push(`${countLabel} ${run.symbol.name.toUpperCase()} // ${LINE_KIND_LABEL[line.kind]}`)
+      addHits(run.cells)
+      if (count >= 5) jackpot = true
+    }
+  }
+
+  const themeLabels: string[] = []
+  let themeWin = 0
+  for (const theme of THEMES) {
+    const themeCells: CellPos[] = []
+    for (const line of FIVE_LINES) {
+      const ids = new Set(line.cells.map(cell => grid[cell.row][cell.reel].id))
+      if (!theme.ids.every(id => ids.has(id))) continue
+      for (const cell of line.cells) {
+        if (theme.ids.includes(grid[cell.row][cell.reel].id)) themeCells.push(cell)
+      }
+    }
+    if (themeCells.length === 0) continue
+    themeWin += bet * theme.mult
+    themeLabels.push(theme.label)
+    addHits(themeCells)
+    if (theme.mult >= 32) jackpot = true
+  }
 
   const win = kindWin + themeWin
-  const parts = [kindLabel, themeLabel].filter(Boolean)
+  const parts = [...labels, ...themeLabels]
   return {
     win,
     label: win > 0 ? parts.join(' + ') : 'NO PAYOUT',
-    jackpot: bestKind.count >= 5 || (theme?.mult ?? 0) >= 30,
+    jackpot,
+    hits: [...hitMap.values()],
   }
 }
 
@@ -201,6 +311,7 @@ export default function NightCitySlots({
   const [status, setStatus] = useState('Вставьте эдди и крутите барабаны.')
   const [lastWin, setLastWin] = useState(0)
   const [jackpot, setJackpot] = useState(false)
+  const [hits, setHits] = useState<Set<string>>(() => new Set())
   const spinTimerRef = useRef<number | null>(null)
 
   useEffect(() => {
@@ -217,8 +328,9 @@ export default function NightCitySlots({
     setArmed(true)
     setLastWin(0)
     setJackpot(false)
+    setHits(new Set())
     setStatus(reelCount === 5
-      ? 'Пять барабанов. Соберите сет, тройку или сюжетную связку.'
+      ? 'Пять барабанов. Линии: горизонт, вертикаль и диагональ.'
       : 'Вставьте эдди и крутите барабаны.')
   }, [reelCount])
 
@@ -240,17 +352,23 @@ export default function NightCitySlots({
 
     const pool = poolFor(reelCount)
     const nextCredits = credits - bet
-    const results = Array.from({ length: reelCount }, () => pickSymbol(pool))
+    const visibles = Array.from({ length: reelCount }, () => (
+      [pickSymbol(pool), pickSymbol(pool), pickSymbol(pool)] as [SlotSymbol, SlotSymbol, SlotSymbol]
+    ))
     const outcome = reelCount === 5
-      ? evaluateFive(results, bet)
-      : evaluateThree(results, bet)
-    const nextStrips = results.map(result => buildStrip(result, pool))
+      ? evaluateFiveGrid(
+          [0, 1, 2].map(row => visibles.map(visible => visible[row])),
+          bet,
+        )
+      : evaluateThree(visibles.map(visible => visible[1]), bet)
+    const nextStrips = visibles.map(visible => buildStrip(visible, pool))
     const times = stopTimes(reelCount)
 
     setCredits(nextCredits)
     persistCredits(nextCredits)
     setLastWin(0)
     setJackpot(false)
+    setHits(new Set())
     setStatus('БАРАБАНЫ ВРАЩАЮТСЯ...')
     setSpinning(true)
     onSpinningChange?.(true)
@@ -272,6 +390,7 @@ export default function NightCitySlots({
       persistCredits(finalCredits)
       setLastWin(outcome.win)
       setJackpot(outcome.jackpot)
+      setHits(new Set(outcome.hits.map(cellKey)))
       setStatus(outcome.win > 0 ? `${outcome.label}  +${outcome.win}` : outcome.label)
       setSpinning(false)
       onSpinningChange?.(false)
@@ -304,6 +423,7 @@ export default function NightCitySlots({
     persistCredits(STARTING_EDDIES)
     setLastWin(0)
     setJackpot(false)
+    setHits(new Set())
     setStatus('Счётчик эдди перезагружен.')
   }
 
@@ -340,9 +460,11 @@ export default function NightCitySlots({
           className={`cyber-slots-window relative grid gap-2 border p-2 ${reelCount === 5 ? 'grid-cols-5' : 'grid-cols-3'}`}
           style={{ ['--slot-size' as string]: `${SYMBOL_SIZE}px` }}
         >
+          {reelCount === 3 && (
+            <div className="cyber-payline-center pointer-events-none absolute z-20" />
+          )}
           {strips.map((strip, reelIndex) => (
             <div key={reelIndex} className="cyber-reel relative overflow-hidden">
-              <div className="cyber-payline pointer-events-none absolute z-10" />
               <div
                 className={`cyber-reel-strip ${armed ? 'is-armed' : ''} ${spinning ? 'is-spinning' : ''}`}
                 style={{
@@ -350,22 +472,27 @@ export default function NightCitySlots({
                   transitionDuration: armed ? `${times[reelIndex]}ms` : '0ms',
                 }}
               >
-                {strip.map((symbol, symbolIndex) => (
-                  <div
-                    key={`${reelIndex}-${symbolIndex}`}
-                    className="cyber-reel-cell relative overflow-hidden border"
-                    style={{ height: SYMBOL_SIZE, width: '100%' }}
-                  >
-                    <Image
-                      src={symbol.image}
-                      alt={symbol.name}
-                      fill
-                      sizes="160px"
-                      className="object-cover"
-                    />
-                    <span className="cyber-reel-name">{symbol.name}</span>
-                  </div>
-                ))}
+                {strip.map((symbol, symbolIndex) => {
+                  const row = symbolIndex - (LAND_INDEX - 1)
+                  const isHit = !spinning && row >= 0 && row <= 2 && hits.has(`${reelIndex}:${row}`)
+                  return (
+                    <div
+                      key={`${reelIndex}-${symbolIndex}`}
+                      className={`cyber-reel-cell relative overflow-hidden border ${isHit ? 'is-hit' : ''}`}
+                      style={{ height: SYMBOL_SIZE, width: '100%' }}
+                    >
+                      <Image
+                        src={symbol.image}
+                        alt={symbol.name}
+                        fill
+                        sizes="160px"
+                        className="object-cover"
+                      />
+                      <span className="cyber-reel-name">{symbol.name}</span>
+                      {isHit && <span className="cyber-reel-hit-mark">WIN</span>}
+                    </div>
+                  )
+                })}
               </div>
             </div>
           ))}
@@ -432,16 +559,19 @@ export default function NightCitySlots({
               ))}
             </div>
             <div className="cyber-text mt-3 mb-1 font-bold">СЮЖЕТНЫЕ СВЯЗКИ</div>
-            <div className="grid grid-cols-1 gap-y-1 sm:grid-cols-2 sm:gap-x-4">
+            <div className="grid grid-cols-1 gap-y-1.5">
               {THEMES.map(theme => (
-                <div key={theme.label} className="flex items-center justify-between gap-2">
-                  <span>{theme.label}</span>
-                  <span className="cyber-number font-mono">×{theme.mult}</span>
+                <div key={theme.label} className="flex items-start justify-between gap-3">
+                  <span>
+                    <span className="font-bold">{theme.label}</span>
+                    <span className="cyber-muted"> — {themeNames(theme.ids)}</span>
+                  </span>
+                  <span className="cyber-number shrink-0 font-mono">×{theme.mult}</span>
                 </div>
               ))}
             </div>
             <div className="mt-2">
-              Пробел или Enter — крутить. Пять одинаковых — джекпот. Связки персонажей суммируются с сетами.
+              Пробел или Enter — крутить. Сеты из трёх и больше собираются по горизонтали, вертикали и диагонали. Сработавшая линия подсвечивается. Связки от трёх персонажей одной фракции суммируются.
             </div>
           </>
         ) : (
@@ -454,7 +584,7 @@ export default function NightCitySlots({
                 </div>
               ))}
             </div>
-            <div className="mt-2">Пробел или Enter — крутить. Три одинаковых персонажа дают джекпот.</div>
+            <div className="mt-2">Пробел или Enter — крутить. Выигрыш считается по центральной жёлтой линии.</div>
           </>
         )}
       </section>

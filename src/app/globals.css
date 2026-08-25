@@ -634,12 +634,40 @@ body.theme-cyberpunk {
   text-align: center;
 }
 
-.cyber-payline {
-  top: calc(var(--slot-size, 112px) + 2px);
+.cyber-reel-cell.is-hit {
+  box-shadow:
+    inset 0 0 0 3px var(--cyber-accent),
+    inset 0 0 22px color-mix(in srgb, var(--cyber-accent) 45%, transparent);
+  animation: cyber-hit-pulse 0.7s ease-in-out infinite;
+}
+
+.cyber-reel-hit-mark {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 3;
+  padding: 1px 5px;
+  background: var(--cyber-accent);
+  color: var(--cyber-banner-text);
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+
+@keyframes cyber-hit-pulse {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.28); }
+}
+
+.cyber-payline-center {
+  left: 0.5rem;
+  right: 0.5rem;
+  top: calc(0.5rem + var(--slot-size, 112px));
   height: var(--slot-size, 112px);
-  border-top: 2px solid var(--cyber-accent);
-  border-bottom: 2px solid var(--cyber-accent);
-  box-shadow: 0 0 16px color-mix(in srgb, var(--cyber-accent) 35%, transparent);
+  border-top: 3px solid var(--cyber-accent);
+  border-bottom: 3px solid var(--cyber-accent);
+  background: color-mix(in srgb, var(--cyber-accent) 10%, transparent);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--cyber-accent) 40%, transparent);
 }
 
 .cyber-slots-light {
