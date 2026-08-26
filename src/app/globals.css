@@ -788,11 +788,17 @@ body.theme-cyberpunk {
   box-shadow: 0 0 14px color-mix(in srgb, #ff2a6d 30%, transparent);
 }
 
-.cyber-easter-smiley {
+.cyber-easter-eggs {
   position: absolute;
   right: 8px;
   bottom: 8px;
   z-index: 25;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.cyber-easter-smiley {
   width: 7px;
   height: 7px;
   padding: 0;
@@ -813,8 +819,23 @@ body.theme-cyberpunk {
   clip-path: polygon(1px 0, 100% 0, 100% calc(100% - 1px), calc(100% - 1px) 100%, 0 100%, 0 1px);
 }
 
+.cyber-easter-orb {
+  width: 7px;
+  height: 7px;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, #ff2a6d 50%, #fcee09 25%);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 32% 28%, #ffd1a8 0 18%, #ff2a6d 42%, #4a0010 100%);
+  opacity: 0.16;
+  cursor: pointer;
+  box-shadow: 0 0 6px color-mix(in srgb, #ff2a6d 35%, transparent);
+}
+
 .cyber-easter-smiley:hover,
-.cyber-easter-smiley:focus-visible {
+.cyber-easter-smiley:focus-visible,
+.cyber-easter-orb:hover,
+.cyber-easter-orb:focus-visible {
   opacity: 0.55;
   outline: none;
 }

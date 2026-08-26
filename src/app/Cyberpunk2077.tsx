@@ -255,6 +255,7 @@ export default function Cyberpunk2077({
   const [slotReels, setSlotReels] = useState<SlotReelCount>(3)
   const [slotsSpinning, setSlotsSpinning] = useState(false)
   const [refillUnlockSignal, setRefillUnlockSignal] = useState(0)
+  const [saburoForceSignal, setSaburoForceSignal] = useState(0)
   const chatEndRef = useRef<HTMLDivElement>(null)
   const touchStartRef = useRef<{ x: number; y: number } | null>(null)
   const cheatClicksRef = useRef<number[]>([])
@@ -801,6 +802,7 @@ export default function Cyberpunk2077({
                 reelCount={slotReels}
                 onSpinningChange={setSlotsSpinning}
                 unlockRefillSignal={refillUnlockSignal}
+                forceSaburoSignal={saburoForceSignal}
               />
             )}
           </div>
@@ -861,14 +863,22 @@ export default function Cyberpunk2077({
       >
         <Eraser className="h-2.5 w-2.5" /> ОБНУЛИТЬСЯ
       </button>
-      <button
-        type="button"
-        onClick={() => setRefillUnlockSignal(value => value + 1)}
-        className="cyber-easter-smiley"
-        aria-label="Разблокировать пополнение"
-      >
-        :)
-      </button>
+      <div className="cyber-easter-eggs">
+        <button
+          type="button"
+          onClick={() => setSaburoForceSignal(value => value + 1)}
+          className="cyber-easter-orb"
+          aria-label="Императорская комбинация"
+        />
+        <button
+          type="button"
+          onClick={() => setRefillUnlockSignal(value => value + 1)}
+          className="cyber-easter-smiley"
+          aria-label="Разблокировать пополнение"
+        >
+          :)
+        </button>
+      </div>
       </div>
 
       {wipeOpen && (

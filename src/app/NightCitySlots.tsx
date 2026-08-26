@@ -348,11 +348,13 @@ export default function NightCitySlots({
   reelCount,
   onSpinningChange,
   unlockRefillSignal = 0,
+  forceSaburoSignal = 0,
 }: {
   active?: boolean
   reelCount: SlotReelCount
   onSpinningChange?: (spinning: boolean) => void
   unlockRefillSignal?: number
+  forceSaburoSignal?: number
 }) {
   const [credits, setCredits] = useState(STARTING_EDDIES)
   const [best, setBest] = useState(STARTING_EDDIES)
@@ -370,6 +372,7 @@ export default function NightCitySlots({
   const [refillLocked, setRefillLocked] = useState(false)
   const [bonus, setBonus] = useState<{ left: number; of: number; bank: number } | null>(null)
   const spinTimerRef = useRef<number | null>(null)
+  const forceSaburoRef = useRef(false)
   const inFreeSpins = bonus !== null
 
   useEffect(() => {
@@ -391,6 +394,11 @@ export default function NightCitySlots({
     localStorage.setItem('cyber-slots-refill-locked', '0')
     setStatus('Терминал пополнения разблокирован.')
   }, [unlockRefillSignal])
+
+  useEffect(() => {
+    if (!forceSaburoSignal) return
+    forceSaburoRef.current = true
+  }, [forceSaburoSignal])
 
   useEffect(() => {
     if (spinning) return
@@ -458,10 +466,15 @@ export default function NightCitySlots({
     }
 
     const pool = poolFor(reelCount, isFree)
-    const nextCredits = isFree ? credits : credits - bet
+    const saburo = SYMBOLS_5.find(symbol => symbol.id === 'saburo')
+    const forceEmperor = !isFree && reelCount === 5 && forceSaburoRef.current && saburo
+    if (forceEmperor) forceSaburoRef.current = false
     const visibles = Array.from({ length: reelCount }, () => (
-      [pickSymbol(pool), pickSymbol(pool), pickSymbol(pool)] as [SlotSymbol, SlotSymbol, SlotSymbol]
+      forceEmperor && saburo
+        ? [saburo, saburo, saburo] as [SlotSymbol, SlotSymbol, SlotSymbol]
+        : [pickSymbol(pool), pickSymbol(pool), pickSymbol(pool)] as [SlotSymbol, SlotSymbol, SlotSymbol]
     ))
+    const nextCredits = isFree ? credits : credits - bet
     const outcome = reelCount === 5
       ? evaluateFiveGrid(
           [0, 1, 2].map(row => visibles.map(visible => visible[row])),
