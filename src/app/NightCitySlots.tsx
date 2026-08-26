@@ -43,7 +43,7 @@ const SYMBOL_SIZE = 112
 const STRIP_LENGTH = 28
 const LAND_INDEX = 24
 const STARTING_EDDIES = 5000
-const FREE_SPIN_COUNT = 5
+const FREE_SPIN_COUNT = 10
 const BETS = [100, 250, 500, 1000] as const
 const MIN_BET = 1
 const MAX_BET = 1_000_000
@@ -320,7 +320,7 @@ function evaluateFiveGrid(grid: SlotSymbol[][], bet: number): SpinOutcome {
   }
   const freeSpins = saburoHits.length > 0 ? FREE_SPIN_COUNT : 0
   if (freeSpins > 0) {
-    labels.unshift('SABURO ARASAKA ×5 // 5 FREE SPINS')
+    labels.unshift('SABURO ARASAKA ×5 // 10 FREE SPINS')
     jackpot = true
   }
 
@@ -410,7 +410,7 @@ export default function NightCitySlots({
     setJackpot(false)
     setHits(new Set())
     setStatus(reelCount === 5
-      ? 'Пять барабанов. Линия из пяти Saburo — 5 фриспинов.'
+      ? 'Пять барабанов. Линия из пяти Saburo — 10 фриспинов.'
       : 'Вставьте эдди и крутите барабаны.')
   }, [reelCount])
 
@@ -767,7 +767,7 @@ export default function NightCitySlots({
               <>
                 <div className="cyber-text mt-3 mb-1 font-bold">SABURO ARASAKA</div>
                 <div className="cyber-muted">
-                  Редкий символ. Линия из пяти Saburo (горизонт или длинная диагональ) — 5 фриспинов. Ставка не списывается. Барабаны на время бонуса: Bryce Mosley, Spider Murphy, Placide, Mama Brigitte, Royce, David Martinez, Lucy.
+                  Редкий символ. Линия из пяти Saburo (горизонт или длинная диагональ) — 10 фриспинов. Ставка не списывается. Барабаны на время бонуса: Bryce Mosley, Spider Murphy, Placide, Mama Brigitte, Royce, David Martinez, Lucy.
                 </div>
                 <div className="cyber-text mt-3 mb-1 font-bold">СЮЖЕТНЫЕ СВЯЗКИ</div>
                 <div className="grid grid-cols-1 gap-y-1.5">
