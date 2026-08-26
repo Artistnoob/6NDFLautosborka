@@ -64,48 +64,48 @@ const SYMBOLS_3: SlotSymbol[] = [
 ]
 
 const SYMBOLS_5: SlotSymbol[] = [
-  { id: 'v', name: 'V', image: slotV, weight: 14, payout2: 1, payout3: 3, payout4: 8, payout5: 25 },
-  { id: 'jackie', name: 'Jackie', image: slotJackie, weight: 12, payout2: 1, payout3: 3, payout4: 9, payout5: 28 },
-  { id: 'judy', name: 'Judy', image: slotJudy, weight: 11, payout2: 1, payout3: 4, payout4: 10, payout5: 32 },
-  { id: 'panam', name: 'Panam', image: slotPanam, weight: 11, payout2: 1, payout3: 4, payout4: 10, payout5: 32 },
-  { id: 'rogue', name: 'Rogue', image: slotRogue, weight: 10, payout2: 1, payout3: 4, payout4: 11, payout5: 35 },
-  { id: 'kerry', name: 'Kerry', image: slotKerry, weight: 10, payout2: 1, payout3: 4, payout4: 11, payout5: 35 },
-  { id: 'river', name: 'River', image: slotRiver, weight: 10, payout2: 1, payout3: 4, payout4: 11, payout5: 35 },
-  { id: 'viktor', name: 'Viktor', image: slotViktor, weight: 9, payout2: 1, payout3: 5, payout4: 12, payout5: 38 },
-  { id: 'evelyn', name: 'Evelyn', image: slotEvelyn, weight: 9, payout2: 1, payout3: 5, payout4: 12, payout5: 38 },
-  { id: 'hands', name: 'Hands', image: slotHands, weight: 9, payout2: 1, payout3: 5, payout4: 13, payout5: 40 },
-  { id: 'wakako', name: 'Wakako', image: slotWakako, weight: 9, payout2: 1, payout3: 5, payout4: 13, payout5: 40 },
-  { id: 'tbug', name: 'T-Bug', image: slotTbug, weight: 8, payout2: 1, payout3: 5, payout4: 14, payout5: 45 },
-  { id: 'mitch', name: 'Mitch', image: slotMitch, weight: 8, payout2: 1, payout3: 5, payout4: 14, payout5: 45 },
-  { id: 'takemura', name: 'Takemura', image: slotTakemura, weight: 8, payout2: 1, payout3: 6, payout4: 15, payout5: 48 },
-  { id: 'reed', name: 'Reed', image: slotReed, weight: 8, payout2: 1, payout3: 6, payout4: 15, payout5: 48 },
-  { id: 'alt', name: 'Alt', image: slotAlt, weight: 7, payout2: 1, payout3: 6, payout4: 16, payout5: 52 },
-  { id: 'dex', name: 'Dex', image: slotDex, weight: 7, payout2: 1, payout3: 6, payout4: 16, payout5: 52 },
-  { id: 'myers', name: 'Myers', image: slotMyers, weight: 7, payout2: 1, payout3: 7, payout4: 18, payout5: 55 },
-  { id: 'songbird', name: 'Songbird', image: slotSongbird, weight: 6, payout2: 1, payout3: 7, payout4: 20, payout5: 60 },
-  { id: 'hansen', name: 'Hansen', image: slotHansen, weight: 6, payout2: 1, payout3: 7, payout4: 20, payout5: 60 },
-  { id: 'hanako', name: 'Hanako', image: slotHanako, weight: 5, payout2: 2, payout3: 8, payout4: 22, payout5: 70 },
-  { id: 'yorinobu', name: 'Yorinobu', image: slotYorinobu, weight: 5, payout2: 2, payout3: 8, payout4: 22, payout5: 70 },
-  { id: 'johnny', name: 'Johnny', image: slotJohnny, weight: 5, payout2: 2, payout3: 9, payout4: 25, payout5: 80 },
-  { id: 'smasher', name: 'Smasher', image: slotSmasher, weight: 3, payout2: 3, payout3: 12, payout4: 35, payout5: 100 },
+  { id: 'v', name: 'V', image: slotV, weight: 12, payout2: 1, payout3: 2, payout4: 5, payout5: 16 },
+  { id: 'jackie', name: 'Jackie', image: slotJackie, weight: 11, payout2: 1, payout3: 2, payout4: 5, payout5: 18 },
+  { id: 'judy', name: 'Judy', image: slotJudy, weight: 10, payout2: 1, payout3: 2, payout4: 6, payout5: 20 },
+  { id: 'panam', name: 'Panam', image: slotPanam, weight: 10, payout2: 1, payout3: 2, payout4: 6, payout5: 20 },
+  { id: 'rogue', name: 'Rogue', image: slotRogue, weight: 10, payout2: 1, payout3: 2, payout4: 6, payout5: 22 },
+  { id: 'kerry', name: 'Kerry', image: slotKerry, weight: 10, payout2: 1, payout3: 2, payout4: 6, payout5: 22 },
+  { id: 'river', name: 'River', image: slotRiver, weight: 10, payout2: 1, payout3: 2, payout4: 6, payout5: 22 },
+  { id: 'viktor', name: 'Viktor', image: slotViktor, weight: 9, payout2: 1, payout3: 3, payout4: 7, payout5: 24 },
+  { id: 'evelyn', name: 'Evelyn', image: slotEvelyn, weight: 9, payout2: 1, payout3: 3, payout4: 7, payout5: 24 },
+  { id: 'hands', name: 'Hands', image: slotHands, weight: 9, payout2: 1, payout3: 3, payout4: 7, payout5: 26 },
+  { id: 'wakako', name: 'Wakako', image: slotWakako, weight: 9, payout2: 1, payout3: 3, payout4: 7, payout5: 26 },
+  { id: 'tbug', name: 'T-Bug', image: slotTbug, weight: 8, payout2: 1, payout3: 3, payout4: 8, payout5: 28 },
+  { id: 'mitch', name: 'Mitch', image: slotMitch, weight: 8, payout2: 1, payout3: 3, payout4: 8, payout5: 28 },
+  { id: 'takemura', name: 'Takemura', image: slotTakemura, weight: 8, payout2: 1, payout3: 3, payout4: 8, payout5: 30 },
+  { id: 'reed', name: 'Reed', image: slotReed, weight: 8, payout2: 1, payout3: 3, payout4: 8, payout5: 30 },
+  { id: 'alt', name: 'Alt', image: slotAlt, weight: 7, payout2: 1, payout3: 4, payout4: 10, payout5: 34 },
+  { id: 'dex', name: 'Dex', image: slotDex, weight: 7, payout2: 1, payout3: 4, payout4: 10, payout5: 34 },
+  { id: 'myers', name: 'Myers', image: slotMyers, weight: 7, payout2: 1, payout3: 4, payout4: 10, payout5: 36 },
+  { id: 'songbird', name: 'Songbird', image: slotSongbird, weight: 6, payout2: 1, payout3: 4, payout4: 12, payout5: 40 },
+  { id: 'hansen', name: 'Hansen', image: slotHansen, weight: 6, payout2: 1, payout3: 4, payout4: 12, payout5: 40 },
+  { id: 'hanako', name: 'Hanako', image: slotHanako, weight: 5, payout2: 2, payout3: 5, payout4: 14, payout5: 48 },
+  { id: 'yorinobu', name: 'Yorinobu', image: slotYorinobu, weight: 5, payout2: 1, payout3: 5, payout4: 14, payout5: 48 },
+  { id: 'johnny', name: 'Johnny', image: slotJohnny, weight: 5, payout2: 2, payout3: 6, payout4: 16, payout5: 55 },
+  { id: 'smasher', name: 'Smasher', image: slotSmasher, weight: 3, payout2: 3, payout3: 8, payout4: 22, payout5: 70 },
 ]
 
 const THEMES: { ids: string[]; label: string; mult: number }[] = [
-  { ids: ['hanako', 'yorinobu', 'takemura', 'smasher'], label: 'ARASAKA TOWER', mult: 18 },
-  { ids: ['reed', 'myers', 'songbird', 'hansen'], label: 'PHANTOM LIBERTY', mult: 16 },
-  { ids: ['v', 'jackie', 'tbug', 'dex'], label: 'THE HEIST', mult: 12 },
-  { ids: ['rogue', 'johnny', 'kerry', 'v'], label: 'AFTERLIFE', mult: 10 },
-  { ids: ['hanako', 'yorinobu', 'takemura'], label: 'ARASAKA BLOOD', mult: 8 },
-  { ids: ['reed', 'myers', 'songbird'], label: 'NUSA DIRECTIVE', mult: 8 },
-  { ids: ['johnny', 'alt', 'v'], label: 'RELIC SYNC', mult: 8 },
-  { ids: ['johnny', 'kerry', 'rogue'], label: 'SAMURAI', mult: 7 },
-  { ids: ['hansen', 'hands', 'reed'], label: 'DOGTOWN DEAL', mult: 7 },
-  { ids: ['v', 'jackie', 'tbug'], label: 'KONPEKI CREW', mult: 6 },
-  { ids: ['panam', 'mitch', 'v'], label: 'ALDECALDOS', mult: 6 },
-  { ids: ['judy', 'evelyn', 'v'], label: 'BRAINDANCE', mult: 6 },
-  { ids: ['rogue', 'hands', 'wakako'], label: 'FIXER NETWORK', mult: 6 },
-  { ids: ['v', 'viktor', 'jackie'], label: 'WATSON', mult: 5 },
-  { ids: ['v', 'river', 'jackie'], label: 'NCPD FILE', mult: 5 },
+  { ids: ['hanako', 'yorinobu', 'takemura', 'smasher'], label: 'ARASAKA TOWER', mult: 8 },
+  { ids: ['reed', 'myers', 'songbird', 'hansen'], label: 'PHANTOM LIBERTY', mult: 7 },
+  { ids: ['v', 'jackie', 'tbug', 'dex'], label: 'THE HEIST', mult: 5 },
+  { ids: ['rogue', 'johnny', 'kerry', 'v'], label: 'AFTERLIFE', mult: 5 },
+  { ids: ['hanako', 'yorinobu', 'takemura'], label: 'ARASAKA BLOOD', mult: 3 },
+  { ids: ['reed', 'myers', 'songbird'], label: 'NUSA DIRECTIVE', mult: 3 },
+  { ids: ['johnny', 'alt', 'v'], label: 'RELIC SYNC', mult: 3 },
+  { ids: ['johnny', 'kerry', 'rogue'], label: 'SAMURAI', mult: 3 },
+  { ids: ['hansen', 'hands', 'reed'], label: 'DOGTOWN DEAL', mult: 3 },
+  { ids: ['v', 'jackie', 'tbug'], label: 'KONPEKI CREW', mult: 2 },
+  { ids: ['panam', 'mitch', 'v'], label: 'ALDECALDOS', mult: 2 },
+  { ids: ['judy', 'evelyn', 'v'], label: 'BRAINDANCE', mult: 2 },
+  { ids: ['rogue', 'hands', 'wakako'], label: 'FIXER NETWORK', mult: 2 },
+  { ids: ['v', 'viktor', 'jackie'], label: 'WATSON', mult: 2 },
+  { ids: ['v', 'river', 'jackie'], label: 'NCPD FILE', mult: 2 },
 ]
 
 function parseBet(raw: string): number | null {
@@ -272,6 +272,7 @@ function evaluateFiveGrid(grid: SlotSymbol[][], bet: number): SpinOutcome {
   for (const theme of THEMES) {
     const themeCells: CellPos[] = []
     for (const line of FIVE_LINES) {
+      if (line.cells.length < 5) continue
       const ids = new Set(line.cells.map(cell => grid[cell.row][cell.reel].id))
       if (!theme.ids.every(id => ids.has(id))) continue
       for (const cell of line.cells) {
@@ -282,7 +283,7 @@ function evaluateFiveGrid(grid: SlotSymbol[][], bet: number): SpinOutcome {
     themeWin += bet * theme.mult
     themeLabels.push(theme.label)
     addHits(themeCells)
-    if (theme.mult >= 12) jackpot = true
+    if (theme.mult >= 7) jackpot = true
   }
 
   const win = kindWin + themeWin
@@ -307,10 +308,12 @@ export default function NightCitySlots({
   active = true,
   reelCount,
   onSpinningChange,
+  unlockRefillSignal = 0,
 }: {
   active?: boolean
   reelCount: SlotReelCount
   onSpinningChange?: (spinning: boolean) => void
+  unlockRefillSignal?: number
 }) {
   const [credits, setCredits] = useState(STARTING_EDDIES)
   const [best, setBest] = useState(STARTING_EDDIES)
@@ -325,6 +328,7 @@ export default function NightCitySlots({
   const [jackpot, setJackpot] = useState(false)
   const [hits, setHits] = useState<Set<string>>(() => new Set())
   const [quizBusy, setQuizBusy] = useState(false)
+  const [refillLocked, setRefillLocked] = useState(false)
   const spinTimerRef = useRef<number | null>(null)
 
   useEffect(() => {
@@ -337,7 +341,15 @@ export default function NightCitySlots({
       setBet(storedBet)
       if (!(BETS as readonly number[]).includes(storedBet)) setCustomBet(String(storedBet))
     }
+    setRefillLocked(localStorage.getItem('cyber-slots-refill-locked') === '1')
   }, [])
+
+  useEffect(() => {
+    if (!unlockRefillSignal) return
+    setRefillLocked(false)
+    localStorage.setItem('cyber-slots-refill-locked', '0')
+    setStatus('Терминал пополнения разблокирован.')
+  }, [unlockRefillSignal])
 
   useEffect(() => {
     if (spinning) return
@@ -477,13 +489,18 @@ export default function NightCitySlots({
   }
 
   const reboot = () => {
-    if (spinning) return
-    setCredits(STARTING_EDDIES)
-    persistCredits(STARTING_EDDIES)
+    if (spinning || refillLocked) return
+    setCredits(current => {
+      const next = current + STARTING_EDDIES
+      persistCredits(next)
+      return next
+    })
+    setRefillLocked(true)
+    localStorage.setItem('cyber-slots-refill-locked', '1')
     setLastWin(0)
     setJackpot(false)
     setHits(new Set())
-    setStatus('Счётчик эдди перезагружен.')
+    setStatus('+5000 эдди. Терминал пополнения заблокирован.')
   }
 
   const paytable = useMemo(
@@ -507,7 +524,7 @@ export default function NightCitySlots({
           />
           <button
             onClick={reboot}
-            disabled={spinning}
+            disabled={spinning || refillLocked}
             className="cyber-btn-accent inline-flex items-center gap-2 border px-3 py-2 text-xs font-bold disabled:opacity-40"
           >
             <RotateCcw className="h-4 w-4" /> ПОПОЛНИТЬ
@@ -655,7 +672,7 @@ export default function NightCitySlots({
               ))}
             </div>
             <div className="mt-2">
-              Пробел или Enter — крутить. Сеты из трёх и больше собираются по горизонтали, вертикали и диагонали. Сработавшая линия подсвечивается. Связки от трёх персонажей одной фракции суммируются.
+              Пробел или Enter — крутить. Сеты из трёх и больше собираются по горизонтали, вертикали и диагонали. Сработавшая линия подсвечивается. Сюжетные связки считаются только на полной линии из пяти.
             </div>
           </>
         ) : (

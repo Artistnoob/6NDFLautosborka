@@ -254,6 +254,7 @@ export default function Cyberpunk2077({
   const [slotsReady, setSlotsReady] = useState(false)
   const [slotReels, setSlotReels] = useState<SlotReelCount>(3)
   const [slotsSpinning, setSlotsSpinning] = useState(false)
+  const [refillUnlockSignal, setRefillUnlockSignal] = useState(0)
   const chatEndRef = useRef<HTMLDivElement>(null)
   const touchStartRef = useRef<{ x: number; y: number } | null>(null)
   const cheatClicksRef = useRef<number[]>([])
@@ -799,6 +800,7 @@ export default function Cyberpunk2077({
                 active={activeGame === 'slots'}
                 reelCount={slotReels}
                 onSpinningChange={setSlotsSpinning}
+                unlockRefillSignal={refillUnlockSignal}
               />
             )}
           </div>
@@ -858,6 +860,14 @@ export default function Cyberpunk2077({
         className="cyber-btn-hot absolute bottom-4 left-4 z-20 inline-flex items-center gap-1 border px-1.5 py-0.5 text-[8px] font-black tracking-widest"
       >
         <Eraser className="h-2.5 w-2.5" /> ОБНУЛИТЬСЯ
+      </button>
+      <button
+        type="button"
+        onClick={() => setRefillUnlockSignal(value => value + 1)}
+        className="cyber-easter-smiley"
+        aria-label="Разблокировать пополнение"
+      >
+        :)
       </button>
       </div>
 
