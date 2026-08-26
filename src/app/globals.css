@@ -600,7 +600,86 @@ body.theme-cyberpunk {
   box-shadow: 0 0 40px color-mix(in srgb, var(--cyber-hot) 45%, transparent);
 }
 
+.cyber-slots.is-freespin {
+  border-color: color-mix(in srgb, #fcee09 55%, #ff2a6d 45%);
+  box-shadow:
+    0 0 28px color-mix(in srgb, #fcee09 28%, transparent),
+    0 0 52px color-mix(in srgb, #ff2a6d 32%, transparent),
+    inset 0 0 40px color-mix(in srgb, #ff2a6d 14%, transparent);
+  animation: cyber-freespin-glow 2.4s ease-in-out infinite;
+}
+
+.cyber-freespin-banner {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  z-index: 8;
+  transform: translateX(-50%);
+  padding: 3px 12px;
+  border: 1px solid color-mix(in srgb, #fcee09 70%, transparent);
+  background: color-mix(in srgb, #05070a 82%, #ff2a6d 18%);
+  color: #fcee09;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.22em;
+  text-shadow: 0 0 10px color-mix(in srgb, #fcee09 70%, transparent);
+  clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
+}
+
+.cyber-slots.is-freespin .cyber-slots-window {
+  border-color: color-mix(in srgb, #fcee09 45%, #00f0ff 30%);
+  box-shadow:
+    inset 0 0 24px color-mix(in srgb, #ff2a6d 22%, transparent),
+    0 0 18px color-mix(in srgb, #00f0ff 18%, transparent);
+}
+
+.cyber-slots.is-freespin .cyber-slots-window::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  background:
+    linear-gradient(110deg, transparent 20%, color-mix(in srgb, #fcee09 16%, transparent) 48%, transparent 72%),
+    linear-gradient(0deg, color-mix(in srgb, #ff2a6d 10%, transparent), transparent 40%);
+  mix-blend-mode: screen;
+  animation: cyber-freespin-sweep 2.8s linear infinite;
+}
+
+.cyber-slots.is-freespin .cyber-slots-light {
+  animation-duration: 0.28s;
+  opacity: 1;
+  background: linear-gradient(90deg, #ff2a6d, #fcee09, #00f0ff);
+}
+
+.cyber-slots.is-freespin .cyber-reel-name {
+  color: #fcee09;
+}
+
+@keyframes cyber-freespin-glow {
+  0%, 100% {
+    box-shadow:
+      0 0 22px color-mix(in srgb, #fcee09 22%, transparent),
+      0 0 40px color-mix(in srgb, #ff2a6d 24%, transparent),
+      inset 0 0 28px color-mix(in srgb, #ff2a6d 10%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 36px color-mix(in srgb, #00f0ff 28%, transparent),
+      0 0 64px color-mix(in srgb, #ff2a6d 38%, transparent),
+      inset 0 0 40px color-mix(in srgb, #fcee09 12%, transparent);
+  }
+}
+
+@keyframes cyber-freespin-sweep {
+  0% { transform: translateX(-30%); opacity: 0.35; }
+  50% { opacity: 0.7; }
+  100% { transform: translateX(30%); opacity: 0.35; }
+}
+
 .cyber-slots-window {
+  position: relative;
+  overflow: hidden;
   border-color: color-mix(in srgb, var(--cyber-line) 40%, transparent);
   background: #05070a;
 }
@@ -700,6 +779,13 @@ body.theme-cyberpunk {
   background: color-mix(in srgb, #39ff14 16%, transparent);
   color: #9dff8a;
   box-shadow: 0 0 14px color-mix(in srgb, #39ff14 28%, transparent);
+}
+
+.cyber-quiz-wrong {
+  border-color: #ff2a6d;
+  background: color-mix(in srgb, #ff2a6d 18%, transparent);
+  color: #ff8fb3;
+  box-shadow: 0 0 14px color-mix(in srgb, #ff2a6d 30%, transparent);
 }
 
 .cyber-easter-smiley {

@@ -28,6 +28,14 @@ import slotYorinobu from './slots/slot-yorinobu.png'
 import slotMitch from './slots/slot-mitch.png'
 import slotWakako from './slots/slot-wakako.png'
 import slotTbug from './slots/slot-tbug.png'
+import slotSaburo from './slots/slot-saburo.png'
+import slotBryce from './slots/slot-bryce.png'
+import slotSpider from './slots/slot-spider.png'
+import slotPlacide from './slots/slot-placide.png'
+import slotBrigitte from './slots/slot-brigitte.png'
+import slotRoyce from './slots/slot-royce.png'
+import slotDavid from './slots/slot-david.png'
+import slotLucy from './slots/slot-lucy.png'
 
 export type SlotReelCount = 3 | 5
 
@@ -35,6 +43,7 @@ const SYMBOL_SIZE = 112
 const STRIP_LENGTH = 28
 const LAND_INDEX = 24
 const STARTING_EDDIES = 5000
+const FREE_SPIN_COUNT = 5
 const BETS = [100, 250, 500, 1000] as const
 const MIN_BET = 1
 const MAX_BET = 1_000_000
@@ -88,6 +97,17 @@ const SYMBOLS_5: SlotSymbol[] = [
   { id: 'yorinobu', name: 'Yorinobu', image: slotYorinobu, weight: 5, payout2: 1, payout3: 5, payout4: 14, payout5: 48 },
   { id: 'johnny', name: 'Johnny', image: slotJohnny, weight: 5, payout2: 2, payout3: 6, payout4: 16, payout5: 55 },
   { id: 'smasher', name: 'Smasher', image: slotSmasher, weight: 3, payout2: 3, payout3: 8, payout4: 22, payout5: 70 },
+  { id: 'saburo', name: 'Saburo', image: slotSaburo, weight: 6, payout2: 0, payout3: 0, payout4: 0, payout5: 0 },
+]
+
+const SYMBOLS_FREE: SlotSymbol[] = [
+  { id: 'bryce', name: 'Bryce', image: slotBryce, weight: 12, payout2: 1, payout3: 3, payout4: 8, payout5: 22 },
+  { id: 'spider', name: 'Spider', image: slotSpider, weight: 11, payout2: 1, payout3: 3, payout4: 8, payout5: 24 },
+  { id: 'placide', name: 'Placide', image: slotPlacide, weight: 11, payout2: 1, payout3: 3, payout4: 8, payout5: 24 },
+  { id: 'brigitte', name: 'Brigitte', image: slotBrigitte, weight: 10, payout2: 1, payout3: 4, payout4: 10, payout5: 28 },
+  { id: 'royce', name: 'Royce', image: slotRoyce, weight: 9, payout2: 1, payout3: 4, payout4: 12, payout5: 32 },
+  { id: 'david', name: 'David', image: slotDavid, weight: 8, payout2: 2, payout3: 5, payout4: 14, payout5: 40 },
+  { id: 'lucy', name: 'Lucy', image: slotLucy, weight: 8, payout2: 2, payout3: 5, payout4: 14, payout5: 40 },
 ]
 
 const THEMES: { ids: string[]; label: string; mult: number }[] = [
@@ -122,7 +142,8 @@ function themeNames(ids: string[]): string {
     .join(', ')
 }
 
-function poolFor(reels: SlotReelCount): SlotSymbol[] {
+function poolFor(reels: SlotReelCount, free = false): SlotSymbol[] {
+  if (reels === 5 && free) return SYMBOLS_FREE
   return reels === 5 ? SYMBOLS_5 : SYMBOLS_3
 }
 
@@ -144,8 +165,8 @@ function buildStrip(visible: [SlotSymbol, SlotSymbol, SlotSymbol], pool: SlotSym
   return strip
 }
 
-function idleStrips(reels: SlotReelCount): SlotSymbol[][] {
-  const pool = poolFor(reels)
+function idleStrips(reels: SlotReelCount, free = false): SlotSymbol[][] {
+  const pool = poolFor(reels, free)
   return Array.from({ length: reels }, () => (
     buildStrip([pickSymbol(pool), pickSymbol(pool), pickSymbol(pool)], pool)
   ))
@@ -165,6 +186,7 @@ interface SpinOutcome {
   label: string
   jackpot: boolean
   hits: CellPos[]
+  freeSpins: number
 }
 
 function cellKey(cell: CellPos): string {
@@ -227,18 +249,19 @@ function evaluateThree(results: SlotSymbol[], bet: number): SpinOutcome {
       label: `ТРИ ${left.name.toUpperCase()}`,
       jackpot: left.payout3 >= 50,
       hits: hits([0, 1, 2]),
+      freeSpins: 0,
     }
   }
   if (left.id === center.id) {
-    return { win: bet * left.payout2, label: `ПАРА // ${left.name}`, jackpot: false, hits: hits([0, 1]) }
+    return { win: bet * left.payout2, label: `ПАРА // ${left.name}`, jackpot: false, hits: hits([0, 1]), freeSpins: 0 }
   }
   if (center.id === right.id) {
-    return { win: bet * center.payout2, label: `ПАРА // ${center.name}`, jackpot: false, hits: hits([1, 2]) }
+    return { win: bet * center.payout2, label: `ПАРА // ${center.name}`, jackpot: false, hits: hits([1, 2]), freeSpins: 0 }
   }
   if (left.id === right.id) {
-    return { win: bet * left.payout2, label: `ПАРА // ${left.name}`, jackpot: false, hits: hits([0, 2]) }
+    return { win: bet * left.payout2, label: `ПАРА // ${left.name}`, jackpot: false, hits: hits([0, 2]), freeSpins: 0 }
   }
-  return { win: 0, label: 'NO PAYOUT', jackpot: false, hits: [] }
+  return { win: 0, label: 'NO PAYOUT', jackpot: false, hits: [], freeSpins: 0 }
 }
 
 function evaluateFiveGrid(grid: SlotSymbol[][], bet: number): SpinOutcome {
@@ -255,6 +278,7 @@ function evaluateFiveGrid(grid: SlotSymbol[][], bet: number): SpinOutcome {
     const symbols = line.cells.map(cell => grid[cell.row][cell.reel])
     const minCount = line.kind === 'vertical' ? 3 : 3
     for (const run of consecutiveRuns(symbols, line.cells)) {
+      if (run.symbol.id === 'saburo') continue
       if (run.cells.length < minCount) continue
       const count = run.cells.length
       const pay = payoutForCount(run.symbol, Math.min(count, 5))
@@ -286,13 +310,28 @@ function evaluateFiveGrid(grid: SlotSymbol[][], bet: number): SpinOutcome {
     if (theme.mult >= 7) jackpot = true
   }
 
+  const saburoHits: CellPos[] = []
+  for (const line of FIVE_LINES) {
+    if (line.cells.length < 5) continue
+    const allSaburo = line.cells.every(cell => grid[cell.row][cell.reel].id === 'saburo')
+    if (!allSaburo) continue
+    addHits(line.cells)
+    saburoHits.push(...line.cells)
+  }
+  const freeSpins = saburoHits.length > 0 ? FREE_SPIN_COUNT : 0
+  if (freeSpins > 0) {
+    labels.unshift('SABURO ARASAKA ×5 // 5 FREE SPINS')
+    jackpot = true
+  }
+
   const win = kindWin + themeWin
   const parts = [...labels, ...themeLabels]
   return {
     win,
-    label: win > 0 ? parts.join(' + ') : 'NO PAYOUT',
+    label: parts.length > 0 ? parts.join(' + ') : 'NO PAYOUT',
     jackpot,
     hits: [...hitMap.values()],
+    freeSpins,
   }
 }
 
@@ -329,7 +368,9 @@ export default function NightCitySlots({
   const [hits, setHits] = useState<Set<string>>(() => new Set())
   const [quizBusy, setQuizBusy] = useState(false)
   const [refillLocked, setRefillLocked] = useState(false)
+  const [bonus, setBonus] = useState<{ left: number; of: number; bank: number } | null>(null)
   const spinTimerRef = useRef<number | null>(null)
+  const inFreeSpins = bonus !== null
 
   useEffect(() => {
     const storedCredits = Number(localStorage.getItem('cyber-slots-credits') ?? STARTING_EDDIES)
@@ -353,6 +394,7 @@ export default function NightCitySlots({
 
   useEffect(() => {
     if (spinning) return
+    setBonus(null)
     setStrips(idleStrips(reelCount))
     setOffsets(idleOffsets(reelCount))
     setArmed(true)
@@ -360,7 +402,7 @@ export default function NightCitySlots({
     setJackpot(false)
     setHits(new Set())
     setStatus(reelCount === 5
-      ? 'Пять барабанов. Линии: горизонт, вертикаль и диагональ.'
+      ? 'Пять барабанов. Линия из пяти Saburo — 5 фриспинов.'
       : 'Вставьте эдди и крутите барабаны.')
   }, [reelCount])
 
@@ -401,19 +443,22 @@ export default function NightCitySlots({
     setCustomBet(String(parsed))
   }
 
-  const spin = useCallback(() => {
+  const spin = useCallback((mode: 'paid' | 'free' = 'paid') => {
     if (spinning) return
-    if (bet < MIN_BET) {
+    const isFree = mode === 'free'
+    if (isFree && reelCount !== 5) return
+    if (!isFree && bonus) return
+    if (!isFree && bet < MIN_BET) {
       setStatus('Укажите ставку.')
       return
     }
-    if (credits < bet) {
+    if (!isFree && credits < bet) {
       setStatus('Недостаточно эдди.')
       return
     }
 
-    const pool = poolFor(reelCount)
-    const nextCredits = credits - bet
+    const pool = poolFor(reelCount, isFree)
+    const nextCredits = isFree ? credits : credits - bet
     const visibles = Array.from({ length: reelCount }, () => (
       [pickSymbol(pool), pickSymbol(pool), pickSymbol(pool)] as [SlotSymbol, SlotSymbol, SlotSymbol]
     ))
@@ -426,12 +471,16 @@ export default function NightCitySlots({
     const nextStrips = visibles.map(visible => buildStrip(visible, pool))
     const times = stopTimes(reelCount)
 
-    setCredits(nextCredits)
-    persistCredits(nextCredits)
+    if (!isFree) {
+      setCredits(nextCredits)
+      persistCredits(nextCredits)
+    }
     setLastWin(0)
     setJackpot(false)
     setHits(new Set())
-    setStatus('БАРАБАНЫ ВРАЩАЮТСЯ...')
+    setStatus(isFree
+      ? `ФРИСПИН ${bonus ? bonus.of - bonus.left + 1 : 1}/${bonus?.of ?? FREE_SPIN_COUNT}`
+      : 'БАРАБАНЫ ВРАЩАЮТСЯ...')
     setSpinning(true)
     onSpinningChange?.(true)
     setArmed(false)
@@ -453,12 +502,46 @@ export default function NightCitySlots({
       setLastWin(outcome.win)
       setJackpot(outcome.jackpot)
       setHits(new Set(outcome.hits.map(cellKey)))
-      setStatus(outcome.win > 0 ? `${outcome.label}  +${outcome.win}` : outcome.label)
       setSpinning(false)
       onSpinningChange?.(false)
       spinTimerRef.current = null
+
+      if (isFree) {
+        const nextLeft = (bonus?.left ?? 1) - 1
+        const nextBank = (bonus?.bank ?? 0) + outcome.win
+        if (nextLeft <= 0) {
+          setBonus(null)
+          setStatus(nextBank > 0
+            ? `ИМПЕРИЯ ОТПУСТИЛА. ФРИСПИНЫ +${nextBank} эдди.`
+            : 'ИМПЕРИЯ ОТПУСТИЛА. Фриспины без выплаты.')
+        } else {
+          setBonus(current => current
+            ? { ...current, left: nextLeft, bank: nextBank }
+            : current)
+          setStatus(outcome.win > 0
+            ? `${outcome.label}  +${outcome.win}  // FREE ${bonus!.of - nextLeft}/${bonus!.of}`
+            : `NO PAYOUT  // FREE ${bonus!.of - nextLeft}/${bonus!.of}`)
+        }
+        return
+      }
+
+      if (outcome.freeSpins > 0 && reelCount === 5) {
+        setBonus({ left: outcome.freeSpins, of: outcome.freeSpins, bank: 0 })
+        setStatus(outcome.win > 0
+          ? `${outcome.label}  +${outcome.win}`
+          : outcome.label)
+        return
+      }
+      setStatus(outcome.win > 0 ? `${outcome.label}  +${outcome.win}` : outcome.label)
     }, times[times.length - 1] + 80)
-  }, [bet, credits, onSpinningChange, persistCredits, reelCount, spinning])
+  }, [bet, bonus, credits, onSpinningChange, persistCredits, reelCount, spinning])
+
+  useEffect(() => {
+    if (spinning || quizBusy || reelCount !== 5) return
+    if (!bonus || bonus.left <= 0) return
+    const id = window.setTimeout(() => spin('free'), 1250)
+    return () => window.clearTimeout(id)
+  }, [bonus, quizBusy, reelCount, spin, spinning])
 
   useEffect(() => {
     return () => {
@@ -473,7 +556,8 @@ export default function NightCitySlots({
       if (!active || quizBusy) return
       if (event.code !== 'Space' && event.key !== 'Enter') return
       event.preventDefault()
-      spin()
+      if (bonus && bonus.left > 0) spin('free')
+      else spin('paid')
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
@@ -489,7 +573,7 @@ export default function NightCitySlots({
   }
 
   const reboot = () => {
-    if (spinning || refillLocked) return
+    if (spinning || refillLocked || inFreeSpins) return
     setCredits(current => {
       const next = current + STARTING_EDDIES
       persistCredits(next)
@@ -504,8 +588,10 @@ export default function NightCitySlots({
   }
 
   const paytable = useMemo(
-    () => [...poolFor(reelCount)].sort((left, right) => right.payout3 - left.payout3),
-    [reelCount],
+    () => [...poolFor(reelCount, inFreeSpins)]
+      .filter(symbol => symbol.payout3 > 0)
+      .sort((left, right) => right.payout3 - left.payout3),
+    [inFreeSpins, reelCount],
   )
   const times = stopTimes(reelCount)
 
@@ -514,17 +600,17 @@ export default function NightCitySlots({
       <div className="mb-4 flex w-full items-center justify-between gap-3">
         <div className="cyber-accent-text flex items-center gap-2">
           <Coins className="h-5 w-5" />
-          <span className="font-bold tracking-widest">AFTERLIFE REELS</span>
+          <span className="font-bold tracking-widest">{inFreeSpins ? 'EMPEROR FREESPINS' : 'AFTERLIFE REELS'}</span>
         </div>
         <div className="flex flex-wrap items-center justify-end gap-2">
           <NightCityContracts
-            disabled={spinning}
+            disabled={spinning || inFreeSpins}
             onAward={awardQuizEddies}
             onBusyChange={setQuizBusy}
           />
           <button
             onClick={reboot}
-            disabled={spinning || refillLocked}
+            disabled={spinning || refillLocked || inFreeSpins}
             className="cyber-btn-accent inline-flex items-center gap-2 border px-3 py-2 text-xs font-bold disabled:opacity-40"
           >
             <RotateCcw className="h-4 w-4" /> ПОПОЛНИТЬ
@@ -532,7 +618,12 @@ export default function NightCitySlots({
         </div>
       </div>
 
-      <div className={`cyber-slots relative w-full border-2 p-4 ${jackpot ? 'is-jackpot' : ''} ${lastWin > 0 && !spinning ? 'is-win' : ''}`}>
+      <div className={`cyber-slots relative w-full border-2 p-4 ${jackpot ? 'is-jackpot' : ''} ${lastWin > 0 && !spinning ? 'is-win' : ''} ${inFreeSpins ? 'is-freespin' : ''}`}>
+        {bonus && (
+          <div className="cyber-freespin-banner">
+            FREE {bonus.of - bonus.left + (spinning ? 1 : 0)}/{bonus.of}
+          </div>
+        )}
         <div className="cyber-slots-lights mb-3 flex justify-between gap-1" aria-hidden="true">
           {Array.from({ length: reelCount === 5 ? 17 : 13 }, (_, index) => (
             <span key={index} className="cyber-slots-light" style={{ animationDelay: `${index * 90}ms` }} />
@@ -586,7 +677,7 @@ export default function NightCitySlots({
             {BETS.map(value => (
               <button
                 key={value}
-                disabled={spinning}
+                disabled={spinning || inFreeSpins}
                 onClick={() => selectPresetBet(value)}
                 className={`border px-2.5 py-1.5 font-mono text-xs font-bold ${
                   customBet === '' && bet === value ? 'cyber-btn-accent' : 'cyber-btn-line'
@@ -604,7 +695,7 @@ export default function NightCitySlots({
                 inputMode="numeric"
                 pattern="[0-9]*"
                 maxLength={7}
-                disabled={spinning}
+                disabled={spinning || inFreeSpins}
                 value={customBet}
                 onChange={event => onCustomBetChange(event.target.value)}
                 onBlur={onCustomBetBlur}
@@ -615,11 +706,11 @@ export default function NightCitySlots({
             </label>
           </div>
           <button
-            onClick={spin}
-            disabled={spinning || credits < bet}
+            onClick={() => spin('paid')}
+            disabled={spinning || inFreeSpins || credits < bet}
             className="cyber-slots-spin border px-8 py-2.5 text-sm font-black tracking-[.25em] disabled:opacity-40"
           >
-            {spinning ? 'SPIN...' : 'SPIN'}
+            {spinning ? 'SPIN...' : inFreeSpins ? 'FREE' : 'SPIN'}
           </button>
         </div>
       </div>
@@ -659,18 +750,31 @@ export default function NightCitySlots({
                 </div>
               ))}
             </div>
-            <div className="cyber-text mt-3 mb-1 font-bold">СЮЖЕТНЫЕ СВЯЗКИ</div>
-            <div className="grid grid-cols-1 gap-y-1.5">
-              {THEMES.map(theme => (
-                <div key={theme.label} className="flex items-start justify-between gap-3">
-                  <span>
-                    <span className="font-bold">{theme.label}</span>
-                    <span className="cyber-muted"> — {themeNames(theme.ids)}</span>
-                  </span>
-                  <span className="cyber-number shrink-0 font-mono">×{theme.mult}</span>
+            {!inFreeSpins && (
+              <>
+                <div className="cyber-text mt-3 mb-1 font-bold">SABURO ARASAKA</div>
+                <div className="cyber-muted">
+                  Редкий символ. Линия из пяти Saburo (горизонт или длинная диагональ) — 5 фриспинов. Ставка не списывается. Барабаны на время бонуса: Bryce Mosley, Spider Murphy, Placide, Mama Brigitte, Royce, David Martinez, Lucy.
                 </div>
-              ))}
-            </div>
+                <div className="cyber-text mt-3 mb-1 font-bold">СЮЖЕТНЫЕ СВЯЗКИ</div>
+                <div className="grid grid-cols-1 gap-y-1.5">
+                  {THEMES.map(theme => (
+                    <div key={theme.label} className="flex items-start justify-between gap-3">
+                      <span>
+                        <span className="font-bold">{theme.label}</span>
+                        <span className="cyber-muted"> — {themeNames(theme.ids)}</span>
+                      </span>
+                      <span className="cyber-number shrink-0 font-mono">×{theme.mult}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+            {inFreeSpins && (
+              <div className="cyber-text mt-3">
+                Фриспины императора: экипаж Edgerunners и Pacifica. Выплаты идут по текущей ставке.
+              </div>
+            )}
             <div className="mt-2">
               Пробел или Enter — крутить. Сеты из трёх и больше собираются по горизонтали, вертикали и диагонали. Сработавшая линия подсвечивается. Сюжетные связки считаются только на полной линии из пяти.
             </div>
