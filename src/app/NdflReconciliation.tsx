@@ -26,6 +26,58 @@ function formatAmount(value: number) {
   }).format(value)
 }
 
+function amountForClipboard(value: number) {
+  return value.toFixed(2).replace('.', ',')
+}
+
+async function copyText(text: string) {
+  try {
+    await navigator.clipboard.writeText(text)
+  } catch {
+    const field = document.createElement('textarea')
+    field.value = text
+    field.setAttribute('readonly', '')
+    field.style.position = 'fixed'
+    field.style.left = '-9999px'
+    document.body.appendChild(field)
+    field.select()
+    document.execCommand('copy')
+    document.body.removeChild(field)
+  }
+}
+
+function CopyableAmount({
+  value,
+  className = '',
+}: {
+  value: number
+  className?: string
+}) {
+  const [copied, setCopied] = useState(false)
+
+  const copy = async () => {
+    await copyText(amountForClipboard(value))
+    setCopied(true)
+    window.setTimeout(() => setCopied(false), 1200)
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={copy}
+      title={copied ? 'Скопировано' : 'Копировать сумму'}
+      className={`relative inline-block rounded px-1 -mx-1 font-mono tabular-nums cursor-pointer transition-colors hover:bg-reconciliation-accent/15 hover:text-reconciliation-accent-hi ${className}`}
+    >
+      {formatAmount(value)}
+      {copied && (
+        <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1 z-20 whitespace-nowrap rounded bg-reconciliation-accent px-2 py-0.5 text-[10px] font-sans font-semibold text-[#102713] shadow-sm">
+          Скопировано
+        </span>
+      )}
+    </button>
+  )
+}
+
 function PasteField({
   title,
   value,
@@ -348,7 +400,7 @@ export default function NdflReconciliation() {
             <div>
               <div className="font-semibold">Результат сверки</div>
               <div className="text-xs text-muted mt-1">
-                Анализ зарплаты минус анализ НДФЛ
+                Анализ зарплаты минус анализ НДФЛ. Клик по сумме копирует её.
               </div>
             </div>
             {totalDifferences === 0 ? (
@@ -396,10 +448,17 @@ export default function NdflReconciliation() {
                                   : 'Суммы различаются'}
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-right font-mono">{formatAmount(row.salaryAmount)}</td>
-                          <td className="px-4 py-3 text-right font-mono">{formatAmount(row.ndflAmount)}</td>
-                          <td className={`px-5 py-3 text-right font-mono ${row.difference < 0 ? 'text-danger' : 'text-warning'}`}>
-                            {formatAmount(row.difference)}
+                          <td className="px-4 py-3 text-right">
+                            <CopyableAmount value={row.salaryAmount} />
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <CopyableAmount value={row.ndflAmount} />
+                          </td>
+                          <td className="px-5 py-3 text-right">
+                            <CopyableAmount
+                              value={row.difference}
+                              className={row.difference < 0 ? 'text-danger' : 'text-warning'}
+                            />
                           </td>
                         </tr>
                       ))}
@@ -486,7 +545,7 @@ export default function NdflReconciliation() {
                               <div className="text-sm font-medium">{base.baseType}</div>
                               <div className="text-sm">
                                 <span className="text-muted">Налоговая база: </span>
-                                <span className="font-mono">{formatAmount(base.taxBase)}</span>
+                                <CopyableAmount value={base.taxBase} />
                               </div>
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3">
@@ -501,16 +560,19 @@ export default function NdflReconciliation() {
                                     Ставка {rate.rate}%
                                   </div>
                                   <div className="text-xs text-muted">Сейчас исчислено</div>
-                                  <div className="font-mono mt-1">{formatAmount(rate.actual)}</div>
+                                  <div className="mt-1"><CopyableAmount value={rate.actual} /></div>
                                   <div className="text-xs text-muted mt-3">Математически верно</div>
-                                  <div className="font-mono mt-1">{formatAmount(rate.expected)}</div>
+                                  <div className="mt-1"><CopyableAmount value={rate.expected} /></div>
                                   <div className="text-xs text-muted mt-3">Разница</div>
-                                  <div className={`font-mono mt-1 ${
-                                    rate.difference === 0
-                                      ? 'text-success'
-                                      : rate.difference < 0 ? 'text-danger' : 'text-warning'
-                                  }`}>
-                                    {formatAmount(rate.difference)}
+                                  <div className="mt-1">
+                                    <CopyableAmount
+                                      value={rate.difference}
+                                      className={
+                                        rate.difference === 0
+                                          ? 'text-success'
+                                          : rate.difference < 0 ? 'text-danger' : 'text-warning'
+                                      }
+                                    />
                                   </div>
                                 </div>
                               ))}

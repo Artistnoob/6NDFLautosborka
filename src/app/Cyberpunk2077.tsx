@@ -256,6 +256,7 @@ export default function Cyberpunk2077({
   const [slotsSpinning, setSlotsSpinning] = useState(false)
   const [refillUnlockSignal, setRefillUnlockSignal] = useState(0)
   const [saburoForceSignal, setSaburoForceSignal] = useState(0)
+  const [auroreForceSignal, setAuroreForceSignal] = useState(0)
   const chatEndRef = useRef<HTMLDivElement>(null)
   const touchStartRef = useRef<{ x: number; y: number } | null>(null)
   const cheatClicksRef = useRef<number[]>([])
@@ -803,6 +804,8 @@ export default function Cyberpunk2077({
                 onSpinningChange={setSlotsSpinning}
                 unlockRefillSignal={refillUnlockSignal}
                 forceSaburoSignal={saburoForceSignal}
+                forceAuroreSignal={auroreForceSignal}
+                preset={preset}
               />
             )}
           </div>
@@ -864,6 +867,14 @@ export default function Cyberpunk2077({
         <Eraser className="h-2.5 w-2.5" /> ОБНУЛИТЬСЯ
       </button>
       <div className="cyber-easter-eggs">
+        <button
+          type="button"
+          onClick={() => setAuroreForceSignal(value => value + 1)}
+          className="cyber-easter-letter"
+          aria-label="Взлом Авроры"
+        >
+          A
+        </button>
         <button
           type="button"
           onClick={() => setSaburoForceSignal(value => value + 1)}

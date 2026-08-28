@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import Image, { type StaticImageData } from 'next/image'
 import { Coins, RotateCcw } from 'lucide-react'
 import NightCityContracts from './NightCityContracts'
@@ -36,6 +37,14 @@ import slotBrigitte from './slots/slot-brigitte.png'
 import slotRoyce from './slots/slot-royce.png'
 import slotDavid from './slots/slot-david.png'
 import slotLucy from './slots/slot-lucy.png'
+import slotAurore from './slots/slot-aurore.png'
+import slotAuroreHack from './slots/slot-aurore-hack.png'
+import slotRegina from './slots/slot-regina.png'
+import slotPadre from './slots/slot-padre.png'
+import slotSkye from './slots/slot-skye.png'
+import slotSaul from './slots/slot-saul.png'
+import slotJefferson from './slots/slot-jefferson.png'
+import slotBlueEyes from './slots/slot-blueeyes.png'
 
 export type SlotReelCount = 3 | 5
 
@@ -44,11 +53,18 @@ const STRIP_LENGTH = 28
 const LAND_INDEX = 24
 const STARTING_EDDIES = 5000
 const FREE_SPIN_COUNT = 10
+const AURORE_FREE_SPIN_COUNT = 5
+const AURORE_GUARANTEE_SPINS = 70
+const AURORE_SPIN_CHANCE = 1 / 48
+const HACK_MS = 3800
 const BETS = [100, 250, 500, 1000] as const
 const MIN_BET = 1
 const MAX_BET = 1_000_000
 const STOP_MS_3 = [1400, 2100, 2800] as const
 const STOP_MS_5 = [1100, 1500, 1900, 2300, 2800] as const
+const STOP_MS_AURORE_HACK = [1600, 2100, 2600, 3100, 3600] as const
+
+type BonusKind = 'saburo' | 'aurore'
 
 interface SlotSymbol {
   id: string
@@ -100,6 +116,17 @@ const SYMBOLS_5: SlotSymbol[] = [
   { id: 'saburo', name: 'Saburo', image: slotSaburo, weight: 6, payout2: 0, payout3: 0, payout4: 0, payout5: 0 },
 ]
 
+const SYMBOL_AURORE_HACK: SlotSymbol = {
+  id: 'aurore-hack',
+  name: 'Aurore',
+  image: slotAuroreHack,
+  weight: 0,
+  payout2: 0,
+  payout3: 0,
+  payout4: 0,
+  payout5: 0,
+}
+
 const SYMBOLS_FREE: SlotSymbol[] = [
   { id: 'bryce', name: 'Bryce', image: slotBryce, weight: 12, payout2: 1, payout3: 3, payout4: 8, payout5: 22 },
   { id: 'spider', name: 'Spider', image: slotSpider, weight: 11, payout2: 1, payout3: 3, payout4: 8, payout5: 24 },
@@ -108,6 +135,16 @@ const SYMBOLS_FREE: SlotSymbol[] = [
   { id: 'royce', name: 'Royce', image: slotRoyce, weight: 9, payout2: 1, payout3: 4, payout4: 12, payout5: 32 },
   { id: 'david', name: 'David', image: slotDavid, weight: 8, payout2: 2, payout3: 5, payout4: 14, payout5: 40 },
   { id: 'lucy', name: 'Lucy', image: slotLucy, weight: 8, payout2: 2, payout3: 5, payout4: 14, payout5: 40 },
+]
+
+const SYMBOLS_AURORE_FREE: SlotSymbol[] = [
+  { id: 'regina', name: 'Regina', image: slotRegina, weight: 12, payout2: 1, payout3: 3, payout4: 8, payout5: 22 },
+  { id: 'padre', name: 'Padre', image: slotPadre, weight: 11, payout2: 1, payout3: 3, payout4: 8, payout5: 24 },
+  { id: 'skye', name: 'Skye', image: slotSkye, weight: 11, payout2: 1, payout3: 3, payout4: 8, payout5: 24 },
+  { id: 'saul', name: 'Saul', image: slotSaul, weight: 10, payout2: 1, payout3: 4, payout4: 10, payout5: 28 },
+  { id: 'jefferson', name: 'Jefferson', image: slotJefferson, weight: 9, payout2: 1, payout3: 4, payout4: 12, payout5: 32 },
+  { id: 'blueeyes', name: 'Blue Eyes', image: slotBlueEyes, weight: 8, payout2: 2, payout3: 5, payout4: 14, payout5: 40 },
+  { id: 'aurore', name: 'Aurore', image: slotAurore, weight: 8, payout2: 2, payout3: 5, payout4: 14, payout5: 40 },
 ]
 
 const THEMES: { ids: string[]; label: string; mult: number }[] = [
@@ -142,8 +179,8 @@ function themeNames(ids: string[]): string {
     .join(', ')
 }
 
-function poolFor(reels: SlotReelCount, free = false): SlotSymbol[] {
-  if (reels === 5 && free) return SYMBOLS_FREE
+function poolFor(reels: SlotReelCount, free = false, kind: BonusKind = 'saburo'): SlotSymbol[] {
+  if (reels === 5 && free) return kind === 'aurore' ? SYMBOLS_AURORE_FREE : SYMBOLS_FREE
   return reels === 5 ? SYMBOLS_5 : SYMBOLS_3
 }
 
@@ -187,6 +224,7 @@ interface SpinOutcome {
   jackpot: boolean
   hits: CellPos[]
   freeSpins: number
+  bonusKind?: BonusKind
 }
 
 function cellKey(cell: CellPos): string {
@@ -278,7 +316,7 @@ function evaluateFiveGrid(grid: SlotSymbol[][], bet: number): SpinOutcome {
     const symbols = line.cells.map(cell => grid[cell.row][cell.reel])
     const minCount = line.kind === 'vertical' ? 3 : 3
     for (const run of consecutiveRuns(symbols, line.cells)) {
-      if (run.symbol.id === 'saburo') continue
+      if (run.symbol.id === 'saburo' || run.symbol.id === 'aurore-hack') continue
       if (run.cells.length < minCount) continue
       const count = run.cells.length
       const pay = payoutForCount(run.symbol, Math.min(count, 5))
@@ -310,6 +348,26 @@ function evaluateFiveGrid(grid: SlotSymbol[][], bet: number): SpinOutcome {
     if (theme.mult >= 7) jackpot = true
   }
 
+  const allAurore = grid.length >= 3
+    && grid[0].length >= 5
+    && grid.every(row => row.every(symbol => symbol.id === 'aurore-hack'))
+  if (allAurore) {
+    const allCells: CellPos[] = []
+    for (let row = 0; row < 3; row++) {
+      for (let reel = 0; reel < 5; reel++) allCells.push({ reel, row })
+    }
+    addHits(allCells)
+    labels.unshift('AURORE CASSEL // BREACH // 5 FREE SPINS')
+    return {
+      win: kindWin + themeWin,
+      label: [...labels, ...themeLabels].join(' + '),
+      jackpot: true,
+      hits: [...hitMap.values()],
+      freeSpins: AURORE_FREE_SPIN_COUNT,
+      bonusKind: 'aurore',
+    }
+  }
+
   const saburoHits: CellPos[] = []
   for (const line of FIVE_LINES) {
     if (line.cells.length < 5) continue
@@ -332,6 +390,7 @@ function evaluateFiveGrid(grid: SlotSymbol[][], bet: number): SpinOutcome {
     jackpot,
     hits: [...hitMap.values()],
     freeSpins,
+    bonusKind: freeSpins > 0 ? 'saburo' : undefined,
   }
 }
 
@@ -349,12 +408,16 @@ export default function NightCitySlots({
   onSpinningChange,
   unlockRefillSignal = 0,
   forceSaburoSignal = 0,
+  forceAuroreSignal = 0,
+  preset = 'classic',
 }: {
   active?: boolean
   reelCount: SlotReelCount
   onSpinningChange?: (spinning: boolean) => void
   unlockRefillSignal?: number
   forceSaburoSignal?: number
+  forceAuroreSignal?: number
+  preset?: 'classic' | 'arasaka' | 'silverhand'
 }) {
   const [credits, setCredits] = useState(STARTING_EDDIES)
   const [best, setBest] = useState(STARTING_EDDIES)
@@ -370,9 +433,12 @@ export default function NightCitySlots({
   const [hits, setHits] = useState<Set<string>>(() => new Set())
   const [quizBusy, setQuizBusy] = useState(false)
   const [refillLocked, setRefillLocked] = useState(false)
-  const [bonus, setBonus] = useState<{ left: number; of: number; bank: number } | null>(null)
+  const [bonus, setBonus] = useState<{ left: number; of: number; bank: number; kind: BonusKind } | null>(null)
+  const [hacking, setHacking] = useState(false)
   const spinTimerRef = useRef<number | null>(null)
   const forceSaburoRef = useRef(false)
+  const forceAuroreRef = useRef(false)
+  const auroreSpinCountRef = useRef(0)
   const inFreeSpins = bonus !== null
 
   useEffect(() => {
@@ -386,6 +452,10 @@ export default function NightCitySlots({
       if (!(BETS as readonly number[]).includes(storedBet)) setCustomBet(String(storedBet))
     }
     setRefillLocked(localStorage.getItem('cyber-slots-refill-locked') === '1')
+    const storedAuroreSpins = Number(localStorage.getItem('cyber-slots-aurore-spins') ?? 0)
+    auroreSpinCountRef.current = Number.isFinite(storedAuroreSpins)
+      ? Math.max(0, Math.floor(storedAuroreSpins))
+      : 0
   }, [])
 
   useEffect(() => {
@@ -401,6 +471,16 @@ export default function NightCitySlots({
   }, [forceSaburoSignal])
 
   useEffect(() => {
+    if (!forceAuroreSignal) return
+    forceAuroreRef.current = true
+  }, [forceAuroreSignal])
+
+  useEffect(() => {
+    document.body.classList.toggle('cyber-hack-active', hacking)
+    return () => document.body.classList.remove('cyber-hack-active')
+  }, [hacking])
+
+  useEffect(() => {
     if (spinning) return
     setBonus(null)
     setStrips(idleStrips(reelCount))
@@ -410,7 +490,7 @@ export default function NightCitySlots({
     setJackpot(false)
     setHits(new Set())
     setStatus(reelCount === 5
-      ? 'Пять барабанов. Линия из пяти Saburo — 10 фриспинов.'
+      ? 'Пять барабанов. Линия из пяти Saburo — 10 фриспинов. Полная сетка Aurore — 5 фриспинов.'
       : 'Вставьте эдди и крутите барабаны.')
   }, [reelCount])
 
@@ -465,15 +545,35 @@ export default function NightCitySlots({
       return
     }
 
-    const pool = poolFor(reelCount, isFree)
+    const bonusKind = isFree ? (bonus?.kind ?? 'saburo') : 'saburo'
+    const pool = poolFor(reelCount, isFree, bonusKind)
     const saburo = SYMBOLS_5.find(symbol => symbol.id === 'saburo')
-    const forceEmperor = !isFree && reelCount === 5 && forceSaburoRef.current && saburo
+
+    let forceAurore = false
+    if (!isFree && reelCount === 5) {
+      auroreSpinCountRef.current += 1
+      forceAurore = forceAuroreRef.current
+        || auroreSpinCountRef.current >= AURORE_GUARANTEE_SPINS
+        || Math.random() < AURORE_SPIN_CHANCE
+      if (forceAurore) {
+        forceAuroreRef.current = false
+        auroreSpinCountRef.current = 0
+      }
+      localStorage.setItem('cyber-slots-aurore-spins', String(auroreSpinCountRef.current))
+    }
+
+    const forceEmperor = !forceAurore && !isFree && reelCount === 5 && forceSaburoRef.current && saburo
     if (forceEmperor) forceSaburoRef.current = false
-    const visibles = Array.from({ length: reelCount }, () => (
-      forceEmperor && saburo
-        ? [saburo, saburo, saburo] as [SlotSymbol, SlotSymbol, SlotSymbol]
-        : [pickSymbol(pool), pickSymbol(pool), pickSymbol(pool)] as [SlotSymbol, SlotSymbol, SlotSymbol]
-    ))
+
+    const visibles = Array.from({ length: reelCount }, () => {
+      if (forceAurore) {
+        return [SYMBOL_AURORE_HACK, SYMBOL_AURORE_HACK, SYMBOL_AURORE_HACK] as [SlotSymbol, SlotSymbol, SlotSymbol]
+      }
+      if (forceEmperor && saburo) {
+        return [saburo, saburo, saburo] as [SlotSymbol, SlotSymbol, SlotSymbol]
+      }
+      return [pickSymbol(pool), pickSymbol(pool), pickSymbol(pool)] as [SlotSymbol, SlotSymbol, SlotSymbol]
+    })
     const nextCredits = isFree ? credits : credits - bet
     const outcome = reelCount === 5
       ? evaluateFiveGrid(
@@ -482,7 +582,8 @@ export default function NightCitySlots({
         )
       : evaluateThree(visibles.map(visible => visible[1]), bet)
     const nextStrips = visibles.map(visible => buildStrip(visible, pool))
-    const times = stopTimes(reelCount)
+    const times = forceAurore ? STOP_MS_AURORE_HACK : stopTimes(reelCount)
+    const settleMs = forceAurore ? HACK_MS : times[times.length - 1] + 80
 
     if (!isFree) {
       setCredits(nextCredits)
@@ -491,9 +592,14 @@ export default function NightCitySlots({
     setLastWin(0)
     setJackpot(false)
     setHits(new Set())
-    setStatus(isFree
-      ? `ФРИСПИН ${bonus ? bonus.of - bonus.left + 1 : 1}/${bonus?.of ?? FREE_SPIN_COUNT}`
-      : 'БАРАБАНЫ ВРАЩАЮТСЯ...')
+    if (forceAurore) {
+      setHacking(true)
+      setStatus('ВАС ВЗЛАМЫВАЮТ...')
+    } else {
+      setStatus(isFree
+        ? `ФРИСПИН ${bonus ? bonus.of - bonus.left + 1 : 1}/${bonus?.of ?? FREE_SPIN_COUNT}`
+        : 'БАРАБАНЫ ВРАЩАЮТСЯ...')
+    }
     setSpinning(true)
     onSpinningChange?.(true)
     setArmed(false)
@@ -516,17 +622,23 @@ export default function NightCitySlots({
       setJackpot(outcome.jackpot)
       setHits(new Set(outcome.hits.map(cellKey)))
       setSpinning(false)
+      setHacking(false)
       onSpinningChange?.(false)
       spinTimerRef.current = null
 
       if (isFree) {
         const nextLeft = (bonus?.left ?? 1) - 1
         const nextBank = (bonus?.bank ?? 0) + outcome.win
+        const kind = bonus?.kind ?? 'saburo'
         if (nextLeft <= 0) {
           setBonus(null)
           setStatus(nextBank > 0
-            ? `ИМПЕРИЯ ОТПУСТИЛА. ФРИСПИНЫ +${nextBank} эдди.`
-            : 'ИМПЕРИЯ ОТПУСТИЛА. Фриспины без выплаты.')
+            ? kind === 'aurore'
+              ? `ВЗЛОМ ЗАВЕРШЁН. ФРИСПИНЫ +${nextBank} эдди.`
+              : `ИМПЕРИЯ ОТПУСТИЛА. ФРИСПИНЫ +${nextBank} эдди.`
+            : kind === 'aurore'
+              ? 'ВЗЛОМ ЗАВЕРШЁН. Фриспины без выплаты.'
+              : 'ИМПЕРИЯ ОТПУСТИЛА. Фриспины без выплаты.')
         } else {
           setBonus(current => current
             ? { ...current, left: nextLeft, bank: nextBank }
@@ -539,14 +651,19 @@ export default function NightCitySlots({
       }
 
       if (outcome.freeSpins > 0 && reelCount === 5) {
-        setBonus({ left: outcome.freeSpins, of: outcome.freeSpins, bank: 0 })
+        setBonus({
+          left: outcome.freeSpins,
+          of: outcome.freeSpins,
+          bank: 0,
+          kind: outcome.bonusKind ?? 'saburo',
+        })
         setStatus(outcome.win > 0
           ? `${outcome.label}  +${outcome.win}`
           : outcome.label)
         return
       }
       setStatus(outcome.win > 0 ? `${outcome.label}  +${outcome.win}` : outcome.label)
-    }, times[times.length - 1] + 80)
+    }, settleMs)
   }, [bet, bonus, credits, onSpinningChange, persistCredits, reelCount, spinning])
 
   useEffect(() => {
@@ -601,19 +718,40 @@ export default function NightCitySlots({
   }
 
   const paytable = useMemo(
-    () => [...poolFor(reelCount, inFreeSpins)]
+    () => [...poolFor(reelCount, inFreeSpins, bonus?.kind ?? 'saburo')]
       .filter(symbol => symbol.payout3 > 0)
       .sort((left, right) => right.payout3 - left.payout3),
-    [inFreeSpins, reelCount],
+    [bonus?.kind, inFreeSpins, reelCount],
   )
-  const times = stopTimes(reelCount)
+  const times = hacking ? STOP_MS_AURORE_HACK : stopTimes(reelCount)
 
   return (
     <div className={`flex w-full flex-col items-center ${reelCount === 5 ? 'max-w-[760px]' : 'max-w-[560px]'}`}>
+      {hacking && createPortal(
+        <div className={`cyber-hack-overlay cyber-preset-${preset}`} aria-live="assertive">
+          <div className="cyber-hack-scanlines" />
+          <div className="cyber-hack-noise" />
+          <div className="cyber-hack-slice cyber-hack-slice-a" />
+          <div className="cyber-hack-slice cyber-hack-slice-b" />
+          <div className="cyber-hack-slice cyber-hack-slice-c" />
+          <div className="cyber-hack-panel">
+            <div className="cyber-hack-kicker">ICE BREAKER // NETWATCH TRACE</div>
+            <div className="cyber-hack-title">ВАС ВЗЛАМЫВАЮТ</div>
+            <div className="cyber-hack-bar" role="progressbar" aria-valuemin={0} aria-valuemax={100}>
+              <div className="cyber-hack-fill" />
+            </div>
+          </div>
+        </div>,
+        document.body,
+      )}
       <div className="mb-4 flex w-full items-center justify-between gap-3">
         <div className="cyber-accent-text flex items-center gap-2">
           <Coins className="h-5 w-5" />
-          <span className="font-bold tracking-widest">{inFreeSpins ? 'EMPEROR FREESPINS' : 'AFTERLIFE REELS'}</span>
+          <span className="font-bold tracking-widest">
+            {inFreeSpins
+              ? bonus?.kind === 'aurore' ? 'AURORE BREACH' : 'EMPEROR FREESPINS'
+              : 'AFTERLIFE REELS'}
+          </span>
         </div>
         <div className="flex flex-wrap items-center justify-end gap-2">
           <NightCityContracts
@@ -631,10 +769,10 @@ export default function NightCitySlots({
         </div>
       </div>
 
-      <div className={`cyber-slots relative w-full border-2 p-4 ${jackpot ? 'is-jackpot' : ''} ${lastWin > 0 && !spinning ? 'is-win' : ''} ${inFreeSpins ? 'is-freespin' : ''}`}>
+      <div className={`cyber-slots relative w-full border-2 p-4 ${jackpot ? 'is-jackpot' : ''} ${lastWin > 0 && !spinning ? 'is-win' : ''} ${inFreeSpins ? 'is-freespin' : ''} ${bonus?.kind === 'aurore' ? 'is-aurore-bonus' : ''} ${hacking ? 'is-hacking' : ''}`}>
         {bonus && (
           <div className="cyber-freespin-banner">
-            FREE {bonus.of - bonus.left + (spinning ? 1 : 0)}/{bonus.of}
+            {bonus.kind === 'aurore' ? 'BREACH' : 'FREE'} {bonus.of - bonus.left + (spinning ? 1 : 0)}/{bonus.of}
           </div>
         )}
         <div className="cyber-slots-lights mb-3 flex justify-between gap-1" aria-hidden="true">
@@ -769,6 +907,10 @@ export default function NightCitySlots({
                 <div className="cyber-muted">
                   Редкий символ. Линия из пяти Saburo (горизонт или длинная диагональ) — 10 фриспинов. Ставка не списывается. Барабаны на время бонуса: Bryce Mosley, Spider Murphy, Placide, Mama Brigitte, Royce, David Martinez, Lucy.
                 </div>
+                <div className="cyber-text mt-3 mb-1 font-bold">AURORE CASSEL</div>
+                <div className="cyber-muted">
+                  С небольшим шансом (не реже чем раз в 70 спинов) Аврора заполняет все ячейки и запускает взлом — 5 фриспинов. Барабаны бонуса: Regina Jones, Padre, Skye, Saul Bright, Jefferson Peralez, Mr. Blue Eyes, Aurore Cassel.
+                </div>
                 <div className="cyber-text mt-3 mb-1 font-bold">СЮЖЕТНЫЕ СВЯЗКИ</div>
                 <div className="grid grid-cols-1 gap-y-1.5">
                   {THEMES.map(theme => (
@@ -785,7 +927,9 @@ export default function NightCitySlots({
             )}
             {inFreeSpins && (
               <div className="cyber-text mt-3">
-                Фриспины императора: экипаж Edgerunners и Pacifica. Выплаты идут по текущей ставке.
+                {bonus?.kind === 'aurore'
+                  ? 'Фриспины Авроры: фиксеры, куклы и призраки Найт-Сити. Выплаты идут по текущей ставке.'
+                  : 'Фриспины императора: экипаж Edgerunners и Pacifica. Выплаты идут по текущей ставке.'}
               </div>
             )}
             <div className="mt-2">
