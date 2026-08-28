@@ -257,7 +257,7 @@ export default function Cyberpunk2077({
   const [refillUnlockSignal, setRefillUnlockSignal] = useState(0)
   const [saburoForceSignal, setSaburoForceSignal] = useState(0)
   const [auroreForceSignal, setAuroreForceSignal] = useState(0)
-  const chatEndRef = useRef<HTMLDivElement>(null)
+  const chatListRef = useRef<HTMLDivElement>(null)
   const touchStartRef = useRef<{ x: number; y: number } | null>(null)
   const cheatClicksRef = useRef<number[]>([])
   const cheatActiveRef = useRef(false)
@@ -410,7 +410,9 @@ export default function Cyberpunk2077({
   }, [loadLeaderboards])
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    const list = chatListRef.current
+    if (!list) return
+    list.scrollTop = list.scrollHeight
   }, [messages])
 
   const sendMessage = async (event: FormEvent) => {
@@ -816,7 +818,7 @@ export default function Cyberpunk2077({
             <MessageSquare className="w-4 h-4" />
             <span className="text-xs font-bold tracking-widest">GLOBAL CHAT // 2077</span>
           </div>
-          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
+          <div ref={chatListRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
             {messages.length === 0 && (
               <div className="cyber-muted mt-8 text-center text-xs">
                 {connectionState === 'connecting'
@@ -837,7 +839,6 @@ export default function Cyberpunk2077({
                 <div className="cyber-chat-text mt-1 break-words text-xs leading-relaxed">{item.message}</div>
               </div>
             ))}
-            <div ref={chatEndRef} />
           </div>
           <form onSubmit={sendMessage} className="cyber-chat-form border-t p-3">
             {chatError && <div className="cyber-hot-text mb-2 text-[10px]">{chatError}</div>}
