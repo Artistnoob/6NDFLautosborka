@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import Image, { type StaticImageData } from 'next/image'
+import { type StaticImageData } from 'next/image'
 import { Coins, RotateCcw } from 'lucide-react'
 import NightCityContracts from './NightCityContracts'
 import slotV from './slots/slot-v.png'
@@ -55,8 +55,10 @@ const STARTING_EDDIES = 5000
 const FREE_SPIN_COUNT = 10
 const AURORE_FREE_SPIN_COUNT = 5
 const AURORE_GUARANTEE_SPINS = 70
+const SABURO_GUARANTEE_SPINS = 180
 const AURORE_SPIN_CHANCE = 1 / 48
 const HACK_MS = 3800
+const ARASAKA_MS = 3800
 const BETS = [100, 250, 500, 1000] as const
 const MIN_BET = 1
 const MAX_BET = 1_000_000
@@ -65,6 +67,7 @@ const STOP_MS_5 = [1100, 1500, 1900, 2300, 2800] as const
 const STOP_MS_AURORE_HACK = [1600, 2100, 2600, 3100, 3600] as const
 
 type BonusKind = 'saburo' | 'aurore'
+type OverlayKind = 'aurore' | 'arasaka'
 
 interface SlotSymbol {
   id: string
@@ -177,6 +180,30 @@ function themeNames(ids: string[]): string {
   return ids
     .map(id => SYMBOLS_5.find(symbol => symbol.id === id)?.name ?? id)
     .join(', ')
+}
+
+function symbolSrc(symbol: SlotSymbol): string {
+  return symbol.image.src
+}
+
+const PRELOAD_POOLS: SlotSymbol[][] = [
+  SYMBOLS_3,
+  SYMBOLS_5,
+  SYMBOLS_FREE,
+  SYMBOLS_AURORE_FREE,
+  [SYMBOL_AURORE_HACK],
+]
+
+const PRELOAD_SRCS = [...new Set(PRELOAD_POOLS.flatMap(pool => pool.map(symbolSrc)))]
+
+function preloadSlotImages() {
+  if (typeof window === 'undefined') return
+  for (const src of PRELOAD_SRCS) {
+    const image = new window.Image()
+    image.decoding = 'async'
+    image.src = src
+    void image.decode?.().catch(() => undefined)
+  }
 }
 
 function poolFor(reels: SlotReelCount, free = false, kind: BonusKind = 'saburo'): SlotSymbol[] {
@@ -434,14 +461,16 @@ export default function NightCitySlots({
   const [quizBusy, setQuizBusy] = useState(false)
   const [refillLocked, setRefillLocked] = useState(false)
   const [bonus, setBonus] = useState<{ left: number; of: number; bank: number; kind: BonusKind } | null>(null)
-  const [hacking, setHacking] = useState(false)
+  const [overlay, setOverlay] = useState<OverlayKind | null>(null)
   const spinTimerRef = useRef<number | null>(null)
   const forceSaburoRef = useRef(false)
   const forceAuroreRef = useRef(false)
   const auroreSpinCountRef = useRef(0)
+  const saburoSpinCountRef = useRef(0)
   const inFreeSpins = bonus !== null
 
   useEffect(() => {
+    preloadSlotImages()
     const storedCredits = Number(localStorage.getItem('cyber-slots-credits') ?? STARTING_EDDIES)
     const storedBest = Number(localStorage.getItem('cyber-slots-best') ?? storedCredits)
     const storedBet = parseBet(localStorage.getItem('cyber-slots-bet') ?? '')
@@ -455,6 +484,10 @@ export default function NightCitySlots({
     const storedAuroreSpins = Number(localStorage.getItem('cyber-slots-aurore-spins') ?? 0)
     auroreSpinCountRef.current = Number.isFinite(storedAuroreSpins)
       ? Math.max(0, Math.floor(storedAuroreSpins))
+      : 0
+    const storedSaburoSpins = Number(localStorage.getItem('cyber-slots-saburo-spins') ?? 0)
+    saburoSpinCountRef.current = Number.isFinite(storedSaburoSpins)
+      ? Math.max(0, Math.floor(storedSaburoSpins))
       : 0
   }, [])
 
@@ -476,9 +509,13 @@ export default function NightCitySlots({
   }, [forceAuroreSignal])
 
   useEffect(() => {
-    document.body.classList.toggle('cyber-hack-active', hacking)
-    return () => document.body.classList.remove('cyber-hack-active')
-  }, [hacking])
+    document.body.classList.toggle('cyber-hack-active', overlay === 'aurore')
+    document.body.classList.toggle('cyber-arasaka-active', overlay === 'arasaka')
+    return () => {
+      document.body.classList.remove('cyber-hack-active')
+      document.body.classList.remove('cyber-arasaka-active')
+    }
+  }, [overlay])
 
   useEffect(() => {
     if (spinning) return
@@ -550,8 +587,10 @@ export default function NightCitySlots({
     const saburo = SYMBOLS_5.find(symbol => symbol.id === 'saburo')
 
     let forceAurore = false
+    let forceEmperor = false
     if (!isFree && reelCount === 5) {
       auroreSpinCountRef.current += 1
+      saburoSpinCountRef.current += 1
       forceAurore = forceAuroreRef.current
         || auroreSpinCountRef.current >= AURORE_GUARANTEE_SPINS
         || Math.random() < AURORE_SPIN_CHANCE
@@ -559,11 +598,17 @@ export default function NightCitySlots({
         forceAuroreRef.current = false
         auroreSpinCountRef.current = 0
       }
+      forceEmperor = !forceAurore && Boolean(saburo) && (
+        forceSaburoRef.current
+        || saburoSpinCountRef.current >= SABURO_GUARANTEE_SPINS
+      )
+      if (forceEmperor) {
+        forceSaburoRef.current = false
+        saburoSpinCountRef.current = 0
+      }
       localStorage.setItem('cyber-slots-aurore-spins', String(auroreSpinCountRef.current))
+      localStorage.setItem('cyber-slots-saburo-spins', String(saburoSpinCountRef.current))
     }
-
-    const forceEmperor = !forceAurore && !isFree && reelCount === 5 && forceSaburoRef.current && saburo
-    if (forceEmperor) forceSaburoRef.current = false
 
     const visibles = Array.from({ length: reelCount }, () => {
       if (forceAurore) {
@@ -581,9 +626,26 @@ export default function NightCitySlots({
           bet,
         )
       : evaluateThree(visibles.map(visible => visible[1]), bet)
-    const nextStrips = visibles.map(visible => buildStrip(visible, pool))
-    const times = forceAurore ? STOP_MS_AURORE_HACK : stopTimes(reelCount)
-    const settleMs = forceAurore ? HACK_MS : times[times.length - 1] + 80
+    const nextStrips = visibles.map(visible => (
+      buildStrip(visible, forceAurore
+        ? [SYMBOL_AURORE_HACK]
+        : forceEmperor && saburo
+          ? [saburo]
+          : pool)
+    ))
+    const overlayKind: OverlayKind | null = forceAurore
+      ? 'aurore'
+      : (forceEmperor || outcome.bonusKind === 'saburo') ? 'arasaka' : null
+    if (outcome.bonusKind === 'saburo' && saburoSpinCountRef.current !== 0) {
+      saburoSpinCountRef.current = 0
+      localStorage.setItem('cyber-slots-saburo-spins', '0')
+    }
+    const times = overlayKind ? STOP_MS_AURORE_HACK : stopTimes(reelCount)
+    const settleMs = overlayKind === 'aurore'
+      ? HACK_MS
+      : overlayKind === 'arasaka'
+        ? ARASAKA_MS
+        : times[times.length - 1] + 80
 
     if (!isFree) {
       setCredits(nextCredits)
@@ -592,9 +654,14 @@ export default function NightCitySlots({
     setLastWin(0)
     setJackpot(false)
     setHits(new Set())
-    if (forceAurore) {
-      setHacking(true)
+    if (overlayKind === 'aurore') {
+      preloadSlotImages()
+      setOverlay('aurore')
       setStatus('ВАС ВЗЛАМЫВАЮТ...')
+    } else if (overlayKind === 'arasaka') {
+      preloadSlotImages()
+      setOverlay('arasaka')
+      setStatus('ARASAKA PROTOCOL...')
     } else {
       setStatus(isFree
         ? `ФРИСПИН ${bonus ? bonus.of - bonus.left + 1 : 1}/${bonus?.of ?? FREE_SPIN_COUNT}`
@@ -622,7 +689,7 @@ export default function NightCitySlots({
       setJackpot(outcome.jackpot)
       setHits(new Set(outcome.hits.map(cellKey)))
       setSpinning(false)
-      setHacking(false)
+      setOverlay(null)
       onSpinningChange?.(false)
       spinTimerRef.current = null
 
@@ -723,11 +790,16 @@ export default function NightCitySlots({
       .sort((left, right) => right.payout3 - left.payout3),
     [bonus?.kind, inFreeSpins, reelCount],
   )
-  const times = hacking ? STOP_MS_AURORE_HACK : stopTimes(reelCount)
+  const times = overlay ? STOP_MS_AURORE_HACK : stopTimes(reelCount)
 
   return (
     <div className={`flex w-full flex-col items-center ${reelCount === 5 ? 'max-w-[760px]' : 'max-w-[560px]'}`}>
-      {hacking && createPortal(
+      <div className="pointer-events-none absolute h-0 w-0 overflow-hidden" aria-hidden="true">
+        {PRELOAD_SRCS.map(src => (
+          <img key={src} src={src} alt="" />
+        ))}
+      </div>
+      {overlay === 'aurore' && createPortal(
         <div className={`cyber-hack-overlay cyber-preset-${preset}`} aria-live="assertive">
           <div className="cyber-hack-scanlines" />
           <div className="cyber-hack-noise" />
@@ -739,6 +811,22 @@ export default function NightCitySlots({
             <div className="cyber-hack-title">ВАС ВЗЛАМЫВАЮТ</div>
             <div className="cyber-hack-bar" role="progressbar" aria-valuemin={0} aria-valuemax={100}>
               <div className="cyber-hack-fill" />
+            </div>
+          </div>
+        </div>,
+        document.body,
+      )}
+      {overlay === 'arasaka' && createPortal(
+        <div className="cyber-arasaka-overlay" aria-live="assertive">
+          <div className="cyber-arasaka-grid" />
+          <div className="cyber-arasaka-scan" />
+          <div className="cyber-arasaka-stamp">荒坂</div>
+          <div className="cyber-arasaka-panel">
+            <div className="cyber-arasaka-kicker">ARASAKA CORPORATION // CLASSIFIED</div>
+            <div className="cyber-arasaka-title">EMPEROR PROTOCOL</div>
+            <div className="cyber-arasaka-sub">SABURO ARASAKA // NEURAL UPLINK</div>
+            <div className="cyber-arasaka-bar" role="progressbar" aria-valuemin={0} aria-valuemax={100}>
+              <div className="cyber-arasaka-fill" />
             </div>
           </div>
         </div>,
@@ -769,7 +857,7 @@ export default function NightCitySlots({
         </div>
       </div>
 
-      <div className={`cyber-slots relative w-full border-2 p-4 ${jackpot ? 'is-jackpot' : ''} ${lastWin > 0 && !spinning ? 'is-win' : ''} ${inFreeSpins ? 'is-freespin' : ''} ${bonus?.kind === 'aurore' ? 'is-aurore-bonus' : ''} ${hacking ? 'is-hacking' : ''}`}>
+      <div className={`cyber-slots relative w-full border-2 p-4 ${jackpot ? 'is-jackpot' : ''} ${lastWin > 0 && !spinning ? 'is-win' : ''} ${inFreeSpins ? 'is-freespin' : ''} ${bonus?.kind === 'aurore' ? 'is-aurore-bonus' : ''} ${overlay ? 'is-hacking' : ''} ${overlay === 'arasaka' ? 'is-arasaka' : ''}`}>
         {bonus && (
           <div className="cyber-freespin-banner">
             {bonus.kind === 'aurore' ? 'BREACH' : 'FREE'} {bonus.of - bonus.left + (spinning ? 1 : 0)}/{bonus.of}
@@ -804,15 +892,14 @@ export default function NightCitySlots({
                     <div
                       key={`${reelIndex}-${symbolIndex}`}
                       className={`cyber-reel-cell relative overflow-hidden border ${isHit ? 'is-hit' : ''}`}
-                      style={{ height: SYMBOL_SIZE, width: '100%' }}
+                      style={{
+                        height: SYMBOL_SIZE,
+                        width: '100%',
+                        backgroundImage: `url(${symbolSrc(symbol)})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                      }}
                     >
-                      <Image
-                        src={symbol.image}
-                        alt={symbol.name}
-                        fill
-                        sizes="160px"
-                        className="object-cover"
-                      />
                       <span className="cyber-reel-name">{symbol.name}</span>
                       {isHit && <span className="cyber-reel-hit-mark">WIN</span>}
                     </div>
@@ -905,7 +992,7 @@ export default function NightCitySlots({
               <>
                 <div className="cyber-text mt-3 mb-1 font-bold">SABURO ARASAKA</div>
                 <div className="cyber-muted">
-                  Редкий символ. Линия из пяти Saburo (горизонт или длинная диагональ) — 10 фриспинов. Ставка не списывается. Барабаны на время бонуса: Bryce Mosley, Spider Murphy, Placide, Mama Brigitte, Royce, David Martinez, Lucy.
+                  Редкий символ. Линия из пяти Saburo (горизонт или длинная диагональ) — 10 фриспинов, не реже чем раз в 180 спинов. Ставка не списывается. Барабаны на время бонуса: Bryce Mosley, Spider Murphy, Placide, Mama Brigitte, Royce, David Martinez, Lucy.
                 </div>
                 <div className="cyber-text mt-3 mb-1 font-bold">AURORE CASSEL</div>
                 <div className="cyber-muted">
