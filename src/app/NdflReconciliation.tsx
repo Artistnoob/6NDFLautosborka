@@ -46,17 +46,21 @@ async function copyText(text: string) {
   }
 }
 
-function CopyableAmount({
-  value,
+function CopyableText({
+  text,
+  display,
+  title = 'Копировать',
   className = '',
 }: {
-  value: number
+  text: string
+  display?: string
+  title?: string
   className?: string
 }) {
   const [copied, setCopied] = useState(false)
 
   const copy = async () => {
-    await copyText(amountForClipboard(value))
+    await copyText(text)
     setCopied(true)
     window.setTimeout(() => setCopied(false), 1200)
   }
@@ -65,16 +69,33 @@ function CopyableAmount({
     <button
       type="button"
       onClick={copy}
-      title={copied ? 'Скопировано' : 'Копировать сумму'}
-      className={`relative inline-block rounded px-1 -mx-1 font-mono tabular-nums cursor-pointer transition-colors hover:bg-reconciliation-accent/15 hover:text-reconciliation-accent-hi ${className}`}
+      title={copied ? 'Скопировано' : title}
+      className={`relative inline-block rounded px-1 -mx-1 max-w-full text-left cursor-pointer transition-colors hover:bg-reconciliation-accent/15 hover:text-reconciliation-accent-hi ${className}`}
     >
-      {formatAmount(value)}
+      {display ?? text}
       {copied && (
         <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1 z-20 whitespace-nowrap rounded bg-reconciliation-accent px-2 py-0.5 text-[10px] font-sans font-semibold text-[#102713] shadow-sm">
           Скопировано
         </span>
       )}
     </button>
+  )
+}
+
+function CopyableAmount({
+  value,
+  className = '',
+}: {
+  value: number
+  className?: string
+}) {
+  return (
+    <CopyableText
+      text={amountForClipboard(value)}
+      display={formatAmount(value)}
+      title="Копировать сумму"
+      className={`font-mono tabular-nums ${className}`}
+    />
   )
 }
 
@@ -400,7 +421,7 @@ export default function NdflReconciliation() {
             <div>
               <div className="font-semibold">Результат сверки</div>
               <div className="text-xs text-muted mt-1">
-                Анализ зарплаты минус анализ НДФЛ. Клик по сумме копирует её.
+                Анализ зарплаты минус анализ НДФЛ. Клик по {dimension === 'employee' ? 'сотруднику' : 'документу'} или сумме копирует значение.
               </div>
             </div>
             {totalDifferences === 0 ? (
@@ -439,7 +460,12 @@ export default function NdflReconciliation() {
                       {section.result.rows.map(row => (
                         <tr key={row.key} className="border-b last:border-b-0 border-reconciliation-border/70">
                           <td className="px-5 py-3">
-                            <div>{row.label}</div>
+                            <div>
+                              <CopyableText
+                                text={row.label}
+                                title={dimension === 'employee' ? 'Копировать сотрудника' : 'Копировать документ'}
+                              />
+                            </div>
                             <div className="text-[11px] text-muted mt-1">
                               {row.status === 'salary-only'
                                 ? 'Отсутствует в анализе НДФЛ'
@@ -511,7 +537,7 @@ export default function NdflReconciliation() {
                 <div>
                   <div className="font-semibold">Проверка прогрессивного налога</div>
                   <div className="text-xs text-muted mt-1">
-                    Обработано строк: {progressiveResult.rowCount}; сотрудников: {progressiveResult.employees.length}
+                    Обработано строк: {progressiveResult.rowCount}; сотрудников: {progressiveResult.employees.length}. Клик по сотруднику или сумме копирует значение.
                   </div>
                 </div>
                 {progressiveResult.employees.every(employee =>
@@ -536,7 +562,7 @@ export default function NdflReconciliation() {
                   {progressiveResult.employees.map(employee => (
                     <div key={employee.employee} className="rounded-xl border border-reconciliation-border overflow-hidden">
                       <div className="px-4 py-3 bg-reconciliation-bg/70 font-semibold">
-                        {employee.employee}
+                        <CopyableText text={employee.employee} title="Копировать сотрудника" />
                       </div>
                       <div className="p-4 flex flex-col gap-4">
                         {employee.bases.map(base => (
